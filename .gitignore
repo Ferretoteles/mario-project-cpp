@@ -1,0 +1,8 @@
+build/
+cmake-build-*/
+.qt/
+.qtc_clangd/
+*.user
+*.suo
+*.vcxproj*
+*.sln

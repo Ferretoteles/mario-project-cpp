@@ -1,0 +1,87 @@
+START DLA POCZATKUJACEGO - ADVENTURE EDITION
+
+1. Otworz Qt Creator.
+2. Kliknij File / Plik.
+3. Kliknij Open File or Project / Otworz plik lub projekt.
+4. Wejdz do folderu:
+   LanternRun_SFML
+5. Wybierz plik:
+   CMakeLists.txt
+6. Kliknij Otworz.
+7. Na ekranie konfiguracji wybierz zestaw Desktop Qt MinGW 64-bit.
+8. Kliknij Configure Project / Skonfiguruj projekt.
+9. Poczekaj. Przy pierwszym razie CMake moze pobrac albo zbudowac SFML.
+10. Kliknij zielony trojkat Run albo nacisnij Ctrl+R.
+
+NIE OTWIERAJ folderu src osobno.
+NIE kopiuj recznie plikow .cpp do nowego projektu.
+Otwierasz tylko LanternRun_SFML/CMakeLists.txt.
+
+STEROWANIE W GRZE:
+
+A / D albo strzalki - ruch
+Shift - sprint
+Space / W / strzalka w gore - skok
+Space drugi raz w powietrzu - podwojny skok
+X albo C - strzal fireballem po zebraniu Fire Flower
+Q - wlacz / wylacz latarnie niesiona w rece
+L - rzuc albo przywolaj magiczna latarnie
+F - przelacz normalny swiat / swiat duchow
+E - pomoz NPC / rozmowa
+I - ignoruj NPC
+P - pauza
+F2 - edytor poziomu
+Enter - wybor w menu / dalej
+Escape - powrot albo zamknij
+
+EDYTOR:
+
+F2 - wlacz/wylacz edytor
+Lewy przycisk myszy - postaw kafelek
+Prawy przycisk myszy - usun kafelek
+1-7 - wybierz kafelek
+G - wygeneruj bonusowy pokoj
+
+SAVE:
+
+Gra zapisuje postep do:
+assets/saves/slot1.json
+assets/saves/slot2.json
+assets/saves/slot3.json
+
+W menu startowym klawisze 1/2/3 wybieraja slot zapisu.
+
+ASSETY:
+
+Dolaczone sprite sheety sa w:
+assets/spritesheets
+
+Gra laduje glowne arkusze:
+characters.png
+enemies_bosses.png
+items_objects_npcs.png
+blocks.png
+tileset.png
+background_mountains.png
+background_trees.png
+background_clouds.png
+
+Gra uzywa tez czystych PNG bez tla:
+assets/sprites/lantern.png
+assets/sprites/heart.png
+
+Wycinki animacji zmienisz w:
+src/Sprites.cpp
+
+Sciezki do assetow sa w jednym miejscu:
+src/AssetManager.cpp
+
+UWAGA O PRZEZROCZYSTOSCI:
+
+characters.png, enemies_bosses.png, items_objects_npcs.png, lantern.png,
+heart.png, player_small.png i player_big.png sa ladowane
+z color key. Program pobiera kolor tla z lewego gornego piksela PNG
+i robi go przezroczystym, z mala tolerancja na podobne odcienie.
+
+Q wlacza i wylacza swiatlo latarni. Noca bez latarni ekran jest mocno ciemny,
+a widoczny zostaje tylko maly obszar wokol gracza albo rzuconej latarni.
