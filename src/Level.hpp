@@ -67,7 +67,7 @@ private:
     void addSecretRoom(int startCol, sf::Vector2f returnTarget, bool keyRoom);
     void baseGround(const std::vector<std::pair<int, int>>& pits);
     void fill(int row, int from, int to, char tile);
-    void placePipe(int col, int width, int height, sf::Vector2f target = {-1.0f, -1.0f});
+    void placePipe(int col, int width, int height, sf::Vector2f target = {-1.0f, -1.0f}, bool plant = false);
     void placeStairs(int startCol, int steps, int direction);
     void addCoins(int row, int from, int to, int every = 2);
     void addEnemy(const std::string& type, int col, int row, int variant = 0);

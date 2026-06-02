@@ -60,6 +60,21 @@ if(WIN32)
                 $<TARGET_FILE_DIR:LanternRunSFML>
         )
     endif()
+
+    # Skopiuj biblioteki runtime MinGW obok exe, zeby gra uruchamiala sie
+    # samodzielnie (poza Qt Creatorem) bez bledu o brakujacych DLL.
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        get_filename_component(MINGW_BIN_DIR "${CMAKE_CXX_COMPILER}" DIRECTORY)
+        foreach(MINGW_DLL libgcc_s_seh-1.dll libstdc++-6.dll libwinpthread-1.dll)
+            if(EXISTS "${MINGW_BIN_DIR}/${MINGW_DLL}")
+                add_custom_command(TARGET LanternRunSFML POST_BUILD
+                    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                        "${MINGW_BIN_DIR}/${MINGW_DLL}"
+                        $<TARGET_FILE_DIR:LanternRunSFML>
+                )
+            endif()
+        endforeach()
+    endif()
 endif()
 
 add_custom_command(TARGET LanternRunSFML POST_BUILD

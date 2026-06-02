@@ -300,6 +300,78 @@ void Spiny::draw(sf::RenderWindow& window, const AssetManager& assets, float) co
     }
 }
 
+PiranhaPlant::PiranhaPlant(sf::Vector2f mouth)
+    : Enemy({mouth.x - 14.0f, mouth.y, 28.0f, 0.0f}, 2)
+    , m_mouthY(mouth.y)
+{
+    m_sprite.addAnimation("bite", {"mario_enemies", {Sprites::enemyFrame("piranha", 0), Sprites::enemyFrame("piranha", 1)}, 5.0f, true});
+    m_sprite.play("bite");
+    m_harmful = false;
+    // lekkie rozsuniecie cyklu wg pozycji, zeby rosliny nie wynurzaly sie rownoczesnie
+    m_phaseTimer = std::fmod(std::abs(mouth.x) * 0.013f, 2.0f);
+}
+
+void PiranhaPlant::update(Level&, Player&, std::vector<Projectile>&, EventSystem&, WorldMode, float dt)
+{
+    if (!m_alive) {
+        m_deadTimer += dt;
+        return;
+    }
+
+    constexpr float HiddenTime = 2.0f;
+    constexpr float RiseTime = 0.5f;
+    constexpr float OutTime = 1.8f;
+    constexpr float LowerTime = 0.5f;
+
+    m_phaseTimer += dt;
+    switch (m_phase) {
+    case 0:
+        m_emerge = 0.0f;
+        if (m_phaseTimer >= HiddenTime) { m_phase = 1; m_phaseTimer = 0.0f; }
+        break;
+    case 1:
+        m_emerge = std::min(1.0f, m_phaseTimer / RiseTime);
+        if (m_phaseTimer >= RiseTime) { m_phase = 2; m_phaseTimer = 0.0f; m_emerge = 1.0f; }
+        break;
+    case 2:
+        m_emerge = 1.0f;
+        if (m_phaseTimer >= OutTime) { m_phase = 3; m_phaseTimer = 0.0f; }
+        break;
+    default:
+        m_emerge = std::max(0.0f, 1.0f - m_phaseTimer / LowerTime);
+        if (m_phaseTimer >= LowerTime) { m_phase = 0; m_phaseTimer = 0.0f; m_emerge = 0.0f; }
+        break;
+    }
+
+    const float height = m_emerge * m_fullHeight;
+    m_rect.height = height;
+    m_rect.top = m_mouthY - height;
+    m_harmful = m_emerge > 0.45f;
+    m_sprite.update(dt);
+}
+
+bool PiranhaPlant::stomp(Player& player, EventSystem& events)
+{
+    // nie da sie zadeptac - skok na rosline konczy sie ugryzieniem gracza
+    if (m_harmful)
+        player.hurt(events);
+    return false;
+}
+
+std::string PiranhaPlant::name() const { return "Piranha Plant"; }
+
+void PiranhaPlant::draw(sf::RenderWindow& window, const AssetManager& assets, float time) const
+{
+    if (!m_alive || m_emerge <= 0.02f)
+        return;
+
+    const float height = m_emerge * m_fullHeight;
+    sf::IntRect frame = Sprites::enemyFrame("piranha", static_cast<int>(time * 5.0f) % 2);
+    frame.height = std::max(1, static_cast<int>(frame.height * m_emerge)); // odsloniety jest gorny fragment sprite'a
+    const sf::FloatRect target(m_rect.left, m_mouthY - height, m_rect.width, height);
+    m_sprite.drawStatic(window, assets, "mario_enemies", frame, target, false);
+}
+
 Boss::Boss(sf::Vector2f pos, int variant)
     : Enemy({pos.x, pos.y - 128.0f, 128.0f, 128.0f}, 12)
     , m_variant(variant)

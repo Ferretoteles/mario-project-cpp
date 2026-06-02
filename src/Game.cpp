@@ -484,6 +484,8 @@ std::unique_ptr<Enemy> Game::makeEnemy(const SpawnRequest& spawn)
         return std::make_unique<Flyer>(spawn.pos);
     if (spawn.type == "shooter")
         return std::make_unique<Shooter>(spawn.pos);
+    if (spawn.type == "piranha")
+        return std::make_unique<PiranhaPlant>(spawn.pos);
     if (spawn.type == "shadow")
         return std::make_unique<ShadowMonster>(spawn.pos);
     if (spawn.type == "runner")

@@ -388,15 +388,15 @@ void Level::buildLevel1()
     setTile(9, 22, '?');
     fill(8, 30, 36, 'B');
     setTile(7, 33, '?');
-    placePipe(38, 2, 2);
+    placePipe(38, 2, 2, {-1.0f, -1.0f}, true);
     fill(9, 55, 61, 'B');
     setTile(8, 59, '?');
-    placePipe(72, 2, 3);
+    placePipe(72, 2, 3, {-1.0f, -1.0f}, true);
     fill(8, 82, 88, 'B');
     setTile(7, 85, '?');
     fill(9, 111, 117, 'B');
     setTile(8, 115, '?');
-    placePipe(126, 3, 3);
+    placePipe(126, 3, 3, {-1.0f, -1.0f}, true);
     fill(8, 137, 143, 'B');
     setTile(7, 140, '?');
     placeStairs(160, 8, 1);
@@ -441,12 +441,12 @@ void Level::buildLevel2()
     setTile(8, 116, '?');
     fill(7, 142, 150, 'B');
     setTile(6, 146, '?');
-    placePipe(26, 2, 2);
+    placePipe(26, 2, 2, {-1.0f, -1.0f}, true);
     placePipe(35, 2, 3, {210.0f * Tile, 10.0f * Tile});
-    placePipe(60, 3, 3);
-    placePipe(101, 2, 4);
+    placePipe(60, 3, 3, {-1.0f, -1.0f}, true);
+    placePipe(101, 2, 4, {-1.0f, -1.0f}, true);
     placePipe(132, 2, 2);
-    placePipe(158, 3, 3);
+    placePipe(158, 3, 3, {-1.0f, -1.0f}, true);
     placeStairs(165, 7, 1);
     addSecretRoom(206, {39.0f * Tile, 10.0f * Tile}, true);
 
@@ -490,8 +490,8 @@ void Level::buildLevel3()
     setTile(7, 166, '?');
     fill(7, 194, 201, 'B');
     setTile(6, 198, '?');
-    placePipe(112, 2, 2);
-    placePipe(188, 2, 2);
+    placePipe(112, 2, 2, {-1.0f, -1.0f}, true);
+    placePipe(188, 2, 2, {-1.0f, -1.0f}, true);
     placeStairs(207, 7, 1);
 
     fill(12, 41, 44, '^');
@@ -546,8 +546,8 @@ void Level::buildLevel4()
     fill(8, 192, 201, 'B');
     placePipe(55, 2, 3, {234.0f * Tile, 10.0f * Tile});
     addSecretRoom(230, {59.0f * Tile, 10.0f * Tile}, true);
-    placePipe(107, 2, 2);
-    placePipe(146, 2, 3);
+    placePipe(107, 2, 2, {-1.0f, -1.0f}, true);
+    placePipe(146, 2, 3, {-1.0f, -1.0f}, true);
     placeStairs(194, 8, 1);
 
     fill(14, 38, 42, '~');
@@ -597,7 +597,7 @@ void Level::buildLevel5()
     fill(8, 36, 43, 'B');
     setTile(7, 41, '?');
     fill(8, 65, 73, 'B');
-    placePipe(47, 2, 3);
+    placePipe(47, 2, 3, {-1.0f, -1.0f}, true);
     fill(12, 77, 80, '^');
     fill(12, 91, 94, '^');
     fill(9, 94, 102, 'B');
@@ -929,7 +929,7 @@ void Level::fill(int row, int from, int to, char tile)
         setTile(row, col, tile);
 }
 
-void Level::placePipe(int col, int width, int height, sf::Vector2f target)
+void Level::placePipe(int col, int width, int height, sf::Vector2f target, bool plant)
 {
     const int top = GroundRow - height;
     for (int x = col; x < col + width; ++x) {
@@ -939,6 +939,10 @@ void Level::placePipe(int col, int width, int height, sf::Vector2f target)
     }
     if (target.x >= 0.0f && target.y >= 0.0f)
         m_teleports.push_back({{col * Tile, top * Tile, width * Tile, height * Tile}, target});
+    if (plant) {
+        // gardziel rury: srodek u gory, skad wynurza sie roslina
+        m_enemySpawns.push_back({"piranha", {(col + width * 0.5f) * Tile, top * Tile}, 0});
+    }
 }
 
 void Level::placeStairs(int startCol, int steps, int direction)

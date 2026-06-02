@@ -108,6 +108,22 @@ public:
     void draw(sf::RenderWindow& window, const AssetManager& assets, float time) const override;
 };
 
+class PiranhaPlant final : public Enemy {
+public:
+    explicit PiranhaPlant(sf::Vector2f mouth);
+    void update(Level& level, Player& player, std::vector<Projectile>& projectiles, EventSystem& events, WorldMode world, float dt) override;
+    bool stomp(Player& player, EventSystem& events) override;
+    std::string name() const override;
+    void draw(sf::RenderWindow& window, const AssetManager& assets, float time) const override;
+
+private:
+    float m_mouthY = 0.0f;
+    float m_fullHeight = 42.0f;
+    float m_emerge = 0.0f;
+    float m_phaseTimer = 0.0f;
+    int m_phase = 0; // 0 ukryta, 1 wynurza sie, 2 na zewnatrz, 3 chowa sie
+};
+
 enum class BossState {
     Sleeping,
     Awakening,
