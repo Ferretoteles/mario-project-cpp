@@ -77,8 +77,6 @@ sf::IntRect itemFrame(ItemType type, int frame)
         return {48 + (frame % 2) * 16, 16, 16, 16};
     case ItemType::Key:
         return {96, 50, 16, 16};
-    case ItemType::Fuel:
-        return {32, 16, 16, 16};
     case ItemType::Chest:
         return {208, 82, 16, 16};
     default:

@@ -6,7 +6,6 @@
 #include "Item.hpp"
 #include "Level.hpp"
 #include "Menu.hpp"
-#include "Npc.hpp"
 #include "Player.hpp"
 #include "QuestManager.hpp"
 #include "SaveManager.hpp"
@@ -81,7 +80,6 @@ private:
     void updateCollisions();
     void completeLevel();
     void respawnOrGameOver();
-    void interactWithNpc(bool help);
     void buyShopItem(int index);
     void editorPaint(sf::Vector2i pixel, char tile);
 
@@ -94,10 +92,8 @@ private:
     void drawCastleFade();
     void drawQuestPanel();
     void drawMinimap();
-    void drawLightOverlay();
     void drawWeather();
     void drawParticles();
-    void drawDialogue();
     void drawLevelSelect();
     void drawSettings();
     void drawShop();
@@ -132,7 +128,6 @@ private:
     Player m_player;
     std::vector<std::unique_ptr<Enemy>> m_enemies;
     std::vector<std::unique_ptr<Item>> m_items;
-    std::vector<std::unique_ptr<Npc>> m_npcs;
     std::vector<Projectile> m_projectiles;
     std::vector<Particle> m_particles;
     std::vector<WeatherParticle> m_weather;
@@ -142,9 +137,7 @@ private:
     WorldMode m_world = WorldMode::Normal;
     sf::Vector2f m_camera{0.0f, 0.0f};
     sf::Vector2f m_checkpoint{3.0f * Tile, 9.0f * Tile};
-    std::string m_dialogue;
     std::string m_shopMessage;
-    float m_dialogueTimer = 0.0f;
     float m_replayTimer = 0.0f;
     float m_autoSaveTimer = 0.0f;
     float m_screenShakeTimer = 0.0f;

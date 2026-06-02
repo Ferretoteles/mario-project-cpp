@@ -33,8 +33,6 @@ void AudioManager::initialize(float volume)
     createTone("boss", 130.0f, 360.0f, 0.26f, 0.35f);
     createTone("quest", 760.0f, 1180.0f, 0.20f, 0.32f);
     createTone("chest", 440.0f, 900.0f, 0.28f, 0.30f);
-    createTone("lantern", 300.0f, 780.0f, 0.20f, 0.28f);
-    createTone("fuel", 420.0f, 920.0f, 0.24f, 0.26f);
     createTone("menu_move", 380.0f, 520.0f, 0.055f, 0.18f);
     createTone("menu_select", 520.0f, 860.0f, 0.11f, 0.22f);
     createMusic();

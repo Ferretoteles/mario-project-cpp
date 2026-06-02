@@ -51,7 +51,6 @@ public:
     const std::string& headline() const;
     const std::vector<SpawnRequest>& enemySpawns() const;
     const std::vector<SpawnRequest>& itemSpawns() const;
-    const std::vector<SpawnRequest>& npcSpawns() const;
     const std::vector<TeleportPipe>& teleports() const;
     std::vector<MovingPlatform>& platforms();
     const std::vector<MovingPlatform>& platforms() const;
@@ -72,7 +71,6 @@ private:
     void addCoins(int row, int from, int to, int every = 2);
     void addEnemy(const std::string& type, int col, int row, int variant = 0);
     void addItem(const std::string& type, int col, int row, int variant = 0);
-    void addNpc(const std::string& type, int col, int row, int variant = 0);
     void drawTile(sf::RenderWindow& window, const AssetManager& assets, char tile, const sf::FloatRect& rect, WorldMode world, bool secretsRevealed, float time) const;
 
     int m_number = 1;
@@ -82,7 +80,6 @@ private:
     std::vector<TeleportPipe> m_teleports;
     std::vector<SpawnRequest> m_enemySpawns;
     std::vector<SpawnRequest> m_itemSpawns;
-    std::vector<SpawnRequest> m_npcSpawns;
     sf::Vector2f m_start{3.0f * Tile, 10.0f * Tile};
     sf::Vector2f m_flag{160.0f * Tile, 7.0f * Tile};
     WeatherType m_weather = WeatherType::Clear;

@@ -45,7 +45,6 @@ void AssetManager::load()
     loadTextureWithColorKey("enemy_sheet", "spritesheets/enemies_bosses.png");
     loadTextureWithColorKey("player_small", "sprites/player_small.png", 0);
     loadTextureWithColorKey("player_big", "sprites/player_big.png", 0);
-    loadTextureWithColorKey("lantern", "sprites/lantern.png", 0);
     loadTextureWithColorKey("coin", "sprites/coin.png", 0);
     loadTextureWithColorKey("mushroom", "sprites/mushroom.png", 0);
     loadTextureWithColorKey("star", "sprites/star.png", 0);

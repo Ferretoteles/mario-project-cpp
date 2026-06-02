@@ -31,10 +31,6 @@ public:
     void giveStar(float seconds);
     void giveFireFlower(float seconds);
     void giveKey();
-    void addFuel(float value, EventSystem& events);
-    void toggleLantern(EventSystem& events);
-    void throwLantern(EventSystem& events);
-    void recallLantern();
 
     sf::FloatRect rect() const;
     sf::Vector2f center() const;
@@ -43,13 +39,7 @@ public:
     bool hasKey() const;
     bool isInvincible() const;
     bool isFalling() const;
-    bool lanternLightActive() const;
-    bool lanternIsOn() const;
-    bool lanternIsThrown() const;
-    bool canRevealSecrets() const;
     bool canShootFire() const;
-    sf::Vector2f lanternPosition() const;
-    float lanternEnergy() const;
     float coinMagnetRadius() const;
     int lives() const;
     int maxLives() const;
@@ -57,7 +47,6 @@ public:
     int xp() const;
     int facing() const;
     float firePowerTimer() const;
-    std::string activePowerUp() const;
     const RunStats& stats() const;
     RunStats& stats();
 
@@ -91,11 +80,6 @@ private:
     float m_jumpBuffer = 0.0f;
     bool m_wasJumpHeld = false;
     float m_anim = 0.0f;
-    float m_lanternEnergy = 100.0f;
-    bool m_lanternOn = true;
-    bool m_lanternThrown = false;
-    sf::Vector2f m_lanternPos{0.0f, 0.0f};
-    sf::Vector2f m_lanternVel{0.0f, 0.0f};
     UpgradeState m_upgrades;
     RunStats m_stats;
     SpriteComponent m_sprite;

@@ -6,8 +6,6 @@ void AchievementManager::attach(SaveData& save, EventSystem& events)
     events.subscribe(EventType::CoinCollected, [this](const GameEvent&) { unlock("Pierwsza moneta"); });
     events.subscribe(EventType::EnemyKilled, [this](const GameEvent&) { unlock("Pogromca potworow"); });
     events.subscribe(EventType::BossDefeated, [this](const GameEvent&) { unlock("Lowca bossow"); });
-    events.subscribe(EventType::NpcRescued, [this](const GameEvent&) { unlock("Pomocna dlon"); });
-    events.subscribe(EventType::LanternFuelFound, [this](const GameEvent&) { unlock("Straznik latarni"); });
 }
 
 void AchievementManager::evaluate(const RunStats& stats, int levelNumber)

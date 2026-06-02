@@ -11,7 +11,7 @@
 namespace {
 sf::FloatRect bobbed(sf::FloatRect rect, ItemType type, float time, float phase)
 {
-    if (type == ItemType::Coin || type == ItemType::Star || type == ItemType::FireFlower || type == ItemType::Fuel)
+    if (type == ItemType::Coin || type == ItemType::Star || type == ItemType::FireFlower)
         rect.top += std::sin(time * 5.0f + phase) * 4.0f;
     return rect;
 }
@@ -308,22 +308,6 @@ void KeyItem::collect(Player& player, EventSystem& events)
     m_alive = false;
 }
 
-FuelItem::FuelItem(sf::Vector2f pos)
-    : Item(ItemType::Fuel, {pos.x, pos.y, 26.0f, 30.0f})
-{
-}
-
-void FuelItem::draw(sf::RenderWindow& window, const AssetManager& assets, float time) const
-{
-    Item::draw(window, assets, time);
-}
-
-void FuelItem::collect(Player& player, EventSystem& events)
-{
-    player.addFuel(38.0f, events);
-    m_alive = false;
-}
-
 ChestItem::ChestItem(sf::Vector2f pos, Rarity rarity)
     : Item(ItemType::Chest, {pos.x, pos.y, 38.0f, 30.0f})
     , m_rarity(rarity)
@@ -365,8 +349,6 @@ std::unique_ptr<Item> makeItem(const SpawnRequest& spawn)
         return std::make_unique<FireFlowerItem>(spawn.pos);
     if (spawn.type == "key")
         return std::make_unique<KeyItem>(spawn.pos);
-    if (spawn.type == "fuel")
-        return std::make_unique<FuelItem>(spawn.pos);
     if (spawn.type == "chest")
         return std::make_unique<ChestItem>(spawn.pos, static_cast<Rarity>(std::clamp(spawn.variant, 0, 3)));
     return nullptr;

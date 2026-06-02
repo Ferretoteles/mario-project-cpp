@@ -51,11 +51,9 @@ enum class EventType {
     PlayerDied,
     LevelCompleted,
     KeyFound,
-    NpcRescued,
     ChestOpened,
     BossDefeated,
-    BossLanded,
-    LanternFuelFound
+    BossLanded
 };
 
 enum class ItemType {
@@ -65,7 +63,6 @@ enum class ItemType {
     Star,
     FireFlower,
     Key,
-    Fuel,
     Chest
 };
 
@@ -74,15 +71,6 @@ enum class Rarity {
     Rare,
     Epic,
     Legendary
-};
-
-enum class NpcRole {
-    GuideGhost,
-    Shopkeeper,
-    Guard,
-    Scientist,
-    Mechanic,
-    Villager
 };
 
 struct GameEvent {
@@ -107,7 +95,6 @@ struct RunStats {
     int deaths = 0;
     int xp = 0;
     int chests = 0;
-    int rescuedNpc = 0;
     float time = 0.0f;
 };
 

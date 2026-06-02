@@ -517,7 +517,7 @@ void Level::buildLevel3()
     addEnemy("spiny", 205, 13);
     m_platforms.push_back({{36.0f * Tile, 8.2f * Tile, 3.5f * Tile, 16.0f}, {}, 33.0f * Tile, 43.0f * Tile, 100.0f, 1, false});
     m_platforms.push_back({{66.0f * Tile, 7.0f * Tile, 3.2f * Tile, 16.0f}, {}, 63.0f * Tile, 72.0f * Tile, 115.0f, -1, false});
-    m_platforms.push_back({{104.0f * Tile, 6.7f * Tile, 3.0f * Tile, 16.0f}, {}, 100.0f * Tile, 116.0f * Tile, 120.0f, 1, true});
+    m_platforms.push_back({{104.0f * Tile, 6.7f * Tile, 3.0f * Tile, 16.0f}, {}, 100.0f * Tile, 116.0f * Tile, 120.0f, 1, false});
     m_platforms.push_back({{151.0f * Tile, 7.4f * Tile, 3.2f * Tile, 16.0f}, {}, 149.0f * Tile, 160.0f * Tile, 110.0f, -1, false});
     m_platforms.push_back({{183.0f * Tile, 6.3f * Tile, 3.0f * Tile, 16.0f}, {}, 180.0f * Tile, 192.0f * Tile, 130.0f, 1, true});
 }
@@ -773,9 +773,14 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
     for (const auto& platform : m_platforms) {
         if (!platform.visible)
             continue;
-        drawRect(window, platform.rect, platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49), sf::Color(82, 45, 34));
-        for (int x = 0; x < static_cast<int>(platform.rect.width); x += 32)
-            drawRect(window, {platform.rect.left + static_cast<float>(x), platform.rect.top + platform.rect.height * 0.45f, 28.0f, 2.0f}, sf::Color(112, 55, 38));
+        // Rysujemy dokladnie na hitboxie - bez wychodzacego na zewnatrz obrysu,
+        // ktory wczesniej przesuwal wizualnie deske o 2 px ponad powierzchnie kolizji.
+        const sf::FloatRect r = platform.rect;
+        const sf::Color body = platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49);
+        drawRect(window, r, body);
+        drawRect(window, {r.left, r.top, r.width, 3.0f}, sf::Color(232, 170, 110));            // jasna gorna krawedz
+        drawRect(window, {r.left, rectBottom(r) - 3.0f, r.width, 3.0f}, sf::Color(82, 45, 34)); // ciemny spod
+        drawRect(window, {r.left, r.top + r.height * 0.5f - 1.0f, r.width, 2.0f}, sf::Color(112, 55, 38)); // sloj na srodku, pelna szerokosc
     }
 }
 
@@ -858,7 +863,6 @@ sf::Vector2f Level::flagPosition() const { return m_flag; }
 const std::string& Level::headline() const { return m_headline; }
 const std::vector<SpawnRequest>& Level::enemySpawns() const { return m_enemySpawns; }
 const std::vector<SpawnRequest>& Level::itemSpawns() const { return m_itemSpawns; }
-const std::vector<SpawnRequest>& Level::npcSpawns() const { return m_npcSpawns; }
 const std::vector<TeleportPipe>& Level::teleports() const { return m_teleports; }
 std::vector<MovingPlatform>& Level::platforms() { return m_platforms; }
 const std::vector<MovingPlatform>& Level::platforms() const { return m_platforms; }
@@ -871,7 +875,6 @@ void Level::clear(int columns)
     m_teleports.clear();
     m_enemySpawns.clear();
     m_itemSpawns.clear();
-    m_npcSpawns.clear();
 }
 
 void Level::placeFlag(int col)
@@ -969,16 +972,11 @@ void Level::addEnemy(const std::string& type, int col, int row, int variant)
 void Level::addItem(const std::string& type, int col, int row, int variant)
 {
     sf::Vector2f pos{col * Tile + 4.0f, row * Tile + 4.0f};
-    if (type == "mushroom" || type == "star" || type == "fireflower" || type == "key" || type == "fuel")
+    if (type == "mushroom" || type == "star" || type == "fireflower" || type == "key")
         pos = {col * Tile, row * Tile};
     if (type == "chest")
         pos = {col * Tile - 3.0f, row * Tile + 2.0f};
     m_itemSpawns.push_back({type, pos, variant});
-}
-
-void Level::addNpc(const std::string& type, int col, int row, int variant)
-{
-    m_npcSpawns.push_back({type, {col * Tile + 6.0f, row * Tile - 4.0f}, variant});
 }
 
 void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char tile, const sf::FloatRect& rect, WorldMode world, bool secretsRevealed, float time) const

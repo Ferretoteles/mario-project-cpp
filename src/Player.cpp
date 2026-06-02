@@ -9,24 +9,6 @@
 
 namespace {
 constexpr float Gravity = 1850.0f;
-
-void drawLanternFallback(sf::RenderWindow& window, sf::Vector2f center, float alpha)
-{
-    const sf::Uint8 a = static_cast<sf::Uint8>(std::clamp(alpha, 0.0f, 1.0f) * 255.0f);
-    sf::RectangleShape body({11.0f, 15.0f});
-    body.setOrigin(5.5f, 7.5f);
-    body.setPosition(center);
-    body.setFillColor(sf::Color(255, 200, 72, a));
-    body.setOutlineColor(sf::Color(70, 44, 24, a));
-    body.setOutlineThickness(2.0f);
-    window.draw(body);
-
-    sf::RectangleShape cap({13.0f, 4.0f});
-    cap.setOrigin(6.5f, 2.0f);
-    cap.setPosition(center.x, center.y - 10.0f);
-    cap.setFillColor(sf::Color(92, 64, 38, a));
-    window.draw(cap);
-}
 }
 
 void Player::reset(sf::Vector2f start, const SaveData& save)
@@ -55,9 +37,6 @@ void Player::reset(sf::Vector2f start, const SaveData& save)
     m_jumpBuffer = 0.0f;
     m_wasJumpHeld = false;
     m_anim = 0.0f;
-    m_lanternEnergy = 100.0f;
-    m_lanternOn = true;
-    m_lanternThrown = false;
     m_stats = {};
     updateSpriteAnimation();
 }
@@ -86,8 +65,6 @@ void Player::respawn(sf::Vector2f start)
     m_coyote = 0.0f;
     m_jumpBuffer = 0.0f;
     m_wasJumpHeld = false;
-    m_lanternOn = true;
-    m_lanternThrown = false;
     configureSprites();
     updateSpriteAnimation();
 }
@@ -182,7 +159,7 @@ void Player::update(Level& level,
         if (m_rect.intersects(pipe.from) && (keyDown(keys, sf::Keyboard::S) || keyDown(keys, sf::Keyboard::Down))) {
             m_rect.left = pipe.to.x;
             m_rect.top = pipe.to.y;
-            AudioManager::instance().play("lantern");
+            AudioManager::instance().play("menu_select");
         }
     }
 
@@ -192,18 +169,6 @@ void Player::update(Level& level,
         m_starTimer -= dt;
     if (m_fireTimer > 0.0f)
         m_fireTimer -= dt;
-
-    const float drain = m_lanternOn ? (world == WorldMode::Ghost ? 3.2f : 1.45f) : 0.18f;
-    m_lanternEnergy = std::max(0.0f, m_lanternEnergy - drain * dt);
-    if (m_lanternThrown) {
-        m_lanternVel.y += 500.0f * dt;
-        m_lanternPos += m_lanternVel * dt;
-        if (m_lanternPos.y > rectBottom(m_rect) + 100.0f)
-            m_lanternVel.y = -std::abs(m_lanternVel.y) * 0.45f;
-        m_lanternEnergy = std::max(0.0f, m_lanternEnergy - 4.0f * dt);
-    } else {
-        m_lanternPos = center() + sf::Vector2f(m_facing * 19.0f, 3.0f);
-    }
 
     updateSpriteAnimation();
     m_sprite.update(dt);
@@ -330,44 +295,6 @@ void Player::giveKey()
     m_hasKey = true;
 }
 
-void Player::addFuel(float value, EventSystem& events)
-{
-    m_lanternEnergy = std::min(100.0f, m_lanternEnergy + value);
-    m_lanternOn = true;
-    events.publish({EventType::LanternFuelFound, static_cast<int>(m_lanternEnergy), "fuel"});
-    AudioManager::instance().play("fuel");
-}
-
-void Player::toggleLantern(EventSystem& events)
-{
-    if (m_lanternEnergy <= 0.0f)
-        return;
-    m_lanternOn = !m_lanternOn;
-    if (!m_lanternOn)
-        m_lanternThrown = false;
-    events.publish({EventType::LanternFuelFound, static_cast<int>(m_lanternEnergy), m_lanternOn ? "on" : "off"});
-    AudioManager::instance().play("lantern");
-}
-
-void Player::throwLantern(EventSystem& events)
-{
-    if (m_lanternEnergy <= 8.0f)
-        return;
-    m_lanternOn = true;
-    m_lanternThrown = !m_lanternThrown;
-    if (m_lanternThrown) {
-        m_lanternPos = center() + sf::Vector2f(m_facing * 25.0f, -8.0f);
-        m_lanternVel = {m_facing * 470.0f, -210.0f};
-    }
-    events.publish({EventType::LanternFuelFound, static_cast<int>(m_lanternEnergy), "throw"});
-    AudioManager::instance().play("lantern");
-}
-
-void Player::recallLantern()
-{
-    m_lanternThrown = false;
-}
-
 sf::FloatRect Player::rect() const { return m_rect; }
 sf::Vector2f Player::center() const { return rectCenter(m_rect); }
 bool Player::alive() const { return m_lives > 0; }
@@ -375,13 +302,7 @@ bool Player::deadAnimationFinished() const { return m_dead && m_deathTimer > 1.1
 bool Player::hasKey() const { return m_hasKey; }
 bool Player::isInvincible() const { return m_invincible > 0.0f || m_starTimer > 0.0f; }
 bool Player::isFalling() const { return m_velocity.y > 80.0f; }
-bool Player::lanternLightActive() const { return m_lanternEnergy > 0.0f && (m_lanternOn || m_lanternThrown); }
-bool Player::lanternIsOn() const { return m_lanternOn; }
-bool Player::lanternIsThrown() const { return m_lanternThrown; }
-bool Player::canRevealSecrets() const { return m_lanternEnergy > 5.0f && m_lanternThrown; }
 bool Player::canShootFire() const { return m_fireTimer > 0.0f && !m_dead; }
-sf::Vector2f Player::lanternPosition() const { return m_lanternPos; }
-float Player::lanternEnergy() const { return m_lanternEnergy; }
 float Player::coinMagnetRadius() const { return magnetRadius(); }
 int Player::lives() const { return m_lives; }
 int Player::maxLives() const { return m_maxLives; }
@@ -389,16 +310,6 @@ int Player::coins() const { return m_coins; }
 int Player::xp() const { return m_xp; }
 int Player::facing() const { return m_facing; }
 float Player::firePowerTimer() const { return std::max(0.0f, m_fireTimer); }
-std::string Player::activePowerUp() const
-{
-    if (m_starTimer > 0.0f)
-        return "Starman";
-    if (m_fireTimer > 0.0f)
-        return "Fire Flower";
-    if (m_big)
-        return "Super Mushroom";
-    return "Lantern";
-}
 const RunStats& Player::stats() const { return m_stats; }
 RunStats& Player::stats() { return m_stats; }
 

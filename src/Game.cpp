@@ -123,7 +123,6 @@ Game::Game()
     m_events.subscribe(EventType::CoinCollected, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::EnemyKilled, [this](const GameEvent& e) { m_player.stats().kills += 1; m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::KeyFound, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
-    m_events.subscribe(EventType::NpcRescued, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::BossDefeated, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::BossLanded, [this](const GameEvent&) {
         m_screenShakeTimer = 0.18f;
@@ -345,10 +344,6 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             m_projectiles.emplace_back(origin, sf::Vector2f(m_player.facing() * 450.0f, -55.0f), true, 2, sf::Color::White);
             AudioManager::instance().play("boss");
         }
-        if (key == sf::Keyboard::E)
-            interactWithNpc(true);
-        if (key == sf::Keyboard::I)
-            interactWithNpc(false);
         if (key == sf::Keyboard::F2)
             setState(AppState::Editor);
         return;
@@ -443,7 +438,6 @@ void Game::loadLevel(int level)
     m_bossItemTimer = 0.0f;
     m_enemies.clear();
     m_items.clear();
-    m_npcs.clear();
     m_projectiles.clear();
     m_particles.clear();
     m_currentReplay.clear();
@@ -467,11 +461,6 @@ void Game::spawnFromLevel()
     }
     for (const auto& spawn : m_level.itemSpawns())
         addItemSpawn(spawn);
-    for (const auto& spawn : m_level.npcSpawns()) {
-        auto npc = makeNpc(spawn);
-        if (npc)
-            m_npcs.push_back(std::move(npc));
-    }
 }
 
 std::unique_ptr<Enemy> Game::makeEnemy(const SpawnRequest& spawn)
@@ -770,16 +759,13 @@ void Game::updatePlaying(float dt)
             m_castleTimer = 0.0f;
         }
     }
-    m_player.update(m_level, playerKeys, m_events, m_world, m_player.canRevealSecrets(), blockSpawns, dt);
+    m_player.update(m_level, playerKeys, m_events, m_world, false, blockSpawns, dt);
     for (const auto& spawn : blockSpawns) {
         if (spawn.type == "burst")
             spawnBurst(spawn.pos, sf::Color(210, 120, 70), 12);
         else
             addItemSpawn(spawn);
     }
-
-    for (auto& npc : m_npcs)
-        npc->update(m_level, m_player, dt);
 
     for (auto& enemy : m_enemies)
         enemy->update(m_level, m_player, m_projectiles, m_events, m_world, dt);
@@ -959,7 +945,7 @@ void Game::completeLevel()
     m_save.bestCoins[m_currentLevel] = std::max(m_save.bestCoins[m_currentLevel], m_player.coins());
     m_saveManager.save(m_save);
     m_events.publish({EventType::LevelCompleted, m_currentLevel, "level"});
-    m_ending = m_quests.completedCount() >= 3 ? "Hero Ending" : m_player.stats().rescuedNpc == 0 ? "Lonely Ending" : "Balanced Ending";
+    m_ending = m_quests.completedCount() >= 3 ? "Hero Ending" : "Balanced Ending";
     setState(AppState::Newspaper);
 }
 
@@ -1000,28 +986,12 @@ void Game::respawnOrGameOver()
         m_screenShakeStrength = 0.0f;
         m_enemies.clear();
         m_items.clear();
-        m_npcs.clear();
         m_projectiles.clear();
         m_particles.clear();
         spawnFromLevel();
     }
 
     m_player.respawn(m_checkpoint);
-}
-
-void Game::interactWithNpc(bool help)
-{
-    for (auto& npc : m_npcs) {
-        if (distance(rectCenter(npc->rect()), m_player.center()) < 82.0f) {
-            m_dialogue = npc->dialogue();
-            m_dialogueTimer = 4.0f;
-            if (help)
-                npc->interact(m_player, m_events);
-            else
-                m_dialogue += " Wybrales ignorowanie NPC.";
-            return;
-        }
-    }
 }
 
 void Game::buyShopItem(int index)
@@ -1103,7 +1073,7 @@ void Game::render()
 void Game::drawWorld()
 {
     m_window.setView(m_worldView);
-    m_level.draw(m_window, m_assets, m_world, m_player.canRevealSecrets(), m_time, m_castleInterior);
+    m_level.draw(m_window, m_assets, m_world, false, m_time, m_castleInterior);
     drawCastleGate();
     for (const auto& item : m_items)
         item->draw(m_window, m_assets, m_time);
@@ -1425,43 +1395,6 @@ void Game::drawMinimap()
     m_window.draw(dot);
 }
 
-void Game::drawLightOverlay()
-{
-    const int dayPhase = static_cast<int>(m_time / 28.0f) % 5;
-    const bool night = dayPhase == 3 || dayPhase == 4 || m_world == WorldMode::Ghost;
-    const float energy = std::clamp(m_player.lanternEnergy() / 100.0f, 0.0f, 1.0f);
-    const bool active = m_player.lanternLightActive();
-
-    if (!night && active && energy > 0.35f)
-        return;
-
-    const sf::Vector2f size = m_worldView.getSize();
-    sf::RectangleShape dark(size);
-    dark.setPosition(m_camera);
-    sf::Uint8 alpha = 0;
-    if (night) {
-        alpha = active ? static_cast<sf::Uint8>(std::clamp(215.0f - energy * 58.0f, 145.0f, 230.0f)) : 238;
-    } else {
-        alpha = active ? static_cast<sf::Uint8>(std::clamp(130.0f - energy * 45.0f, 55.0f, 135.0f)) : 195;
-    }
-    if (m_world == WorldMode::Ghost)
-        alpha = std::max<sf::Uint8>(alpha, active ? 180 : 235);
-    dark.setFillColor(sf::Color(2, 4, 14, alpha));
-    m_window.draw(dark);
-
-    const sf::Vector2f lightPos = m_player.lanternIsThrown() ? m_player.lanternPosition() : m_player.center();
-    const float baseRadius = active ? 38.0f + energy * 118.0f : 18.0f;
-    for (int i = 5; i > 0; --i) {
-        const float radius = baseRadius * (0.42f + i * 0.18f);
-        sf::CircleShape glow(radius, 64);
-        glow.setOrigin(radius, radius);
-        glow.setPosition(lightPos);
-        const sf::Uint8 glowAlpha = active ? static_cast<sf::Uint8>(10 + energy * (8 + i * 4)) : 4;
-        glow.setFillColor(sf::Color(255, 218, 118, glowAlpha));
-        m_window.draw(glow, sf::BlendAdd);
-    }
-}
-
 void Game::drawWeather()
 {
     for (const auto& p : m_weather) {
@@ -1513,21 +1446,6 @@ void Game::drawParticles()
     }
 }
 
-void Game::drawDialogue()
-{
-    if (m_dialogueTimer <= 0.0f)
-        return;
-    m_dialogueTimer -= 1.0f / 60.0f;
-    sf::RectangleShape box({m_uiView.getSize().x - 80.0f, 72.0f});
-    box.setPosition(40.0f, m_uiView.getSize().y - 100.0f);
-    box.setFillColor(sf::Color(8, 12, 24, 220));
-    box.setOutlineColor(sf::Color(255, 230, 120));
-    box.setOutlineThickness(2.0f);
-    m_window.draw(box);
-    drawText(m_dialogue, 16, {60.0f, m_uiView.getSize().y - 82.0f}, sf::Color(240, 245, 255));
-    drawText("E - pomoz  |  I - ignoruj", 13, {60.0f, m_uiView.getSize().y - 54.0f}, sf::Color(255, 230, 150));
-}
-
 void Game::drawLevelSelect()
 {
     sf::Vector2f size = m_uiView.getSize();
@@ -1573,7 +1491,7 @@ void Game::drawNewspaper()
     drawText("GAZETA POZIOMU " + std::to_string(m_currentLevel), 34, {m_uiView.getSize().x * 0.5f, 105.0f}, sf::Color(55, 42, 32), true, 0.0f);
     drawText(m_level.headline(), 20, {120.0f, 165.0f}, sf::Color(55, 42, 32), false, 0.0f);
     drawText("Monety: " + std::to_string(m_player.coins()) + "  Wrogowie: " + std::to_string(m_player.stats().kills) + "  Czas: " + std::to_string(static_cast<int>(m_player.stats().time)) + "s", 18, {120.0f, 220.0f}, sf::Color(55, 42, 32), false, 0.0f);
-    const int score = m_player.coins() * 10 + m_player.stats().kills * 100 + m_player.stats().rescuedNpc * 150 - static_cast<int>(m_player.stats().time) * 2 - m_player.stats().deaths * 120;
+    const int score = m_player.coins() * 10 + m_player.stats().kills * 100 - static_cast<int>(m_player.stats().time) * 2 - m_player.stats().deaths * 120;
     const std::string rank = score > 2200 ? "S" : score > 1600 ? "A" : score > 1000 ? "B" : score > 550 ? "C" : "D";
     drawText("Ranga: " + rank + "  Sekrety/skrzynie: " + std::to_string(m_player.stats().chests) + "  Zgony: " + std::to_string(m_player.stats().deaths), 18, {120.0f, 260.0f}, sf::Color(55, 42, 32), false, 0.0f);
     drawText("Zakonczenie teraz: " + m_ending, 18, {120.0f, 300.0f}, sf::Color(55, 42, 32), false, 0.0f);

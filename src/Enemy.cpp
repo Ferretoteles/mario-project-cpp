@@ -217,7 +217,7 @@ void ShadowMonster::update(Level& level, Player& player, std::vector<Projectile>
         m_deadTimer += dt;
         return;
     }
-    const float chase = world == WorldMode::Ghost || player.lanternEnergy() < 35.0f ? 135.0f : 45.0f;
+    const float chase = world == WorldMode::Ghost ? 135.0f : 45.0f;
     m_direction = player.center().x < rectCenter(m_rect).x ? -1 : 1;
     walk(level, world, true, chase, dt);
     m_sprite.update(dt);

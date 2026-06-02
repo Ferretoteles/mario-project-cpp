@@ -72,13 +72,6 @@ public:
     void collect(Player& player, EventSystem& events) override;
 };
 
-class FuelItem final : public Item {
-public:
-    explicit FuelItem(sf::Vector2f pos);
-    void draw(sf::RenderWindow& window, const AssetManager& assets, float time) const override;
-    void collect(Player& player, EventSystem& events) override;
-};
-
 class ChestItem final : public Item {
 public:
     ChestItem(sf::Vector2f pos, Rarity rarity);
