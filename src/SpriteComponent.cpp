@@ -63,7 +63,7 @@ void SpriteComponent::drawStatic(sf::RenderWindow& window,
     sprite.setColor(tint);
     if (flipX) {
         sprite.setOrigin(static_cast<float>(source.width), 0.0f);
-        sprite.setPosition(target.left + target.width, target.top);
+        sprite.setPosition(target.left, target.top);
         sprite.setScale(-target.width / static_cast<float>(source.width), target.height / static_cast<float>(source.height));
     } else {
         sprite.setPosition(target.left, target.top);
