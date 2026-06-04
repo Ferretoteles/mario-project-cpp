@@ -88,11 +88,6 @@ CollisionResult CollisionManager::move(sf::FloatRect& rect,
     return result;
 }
 
-bool CollisionManager::overlaps(const sf::FloatRect& a, const sf::FloatRect& b)
-{
-    return a.intersects(b);
-}
-
 bool CollisionManager::tileHazardAt(const Level& level, sf::Vector2f point)
 {
     const int row = static_cast<int>(std::floor(point.y / Tile));

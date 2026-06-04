@@ -20,17 +20,9 @@ void AchievementManager::evaluate(const RunStats& stats, int levelNumber)
         unlock("Koniec wyprawy");
 }
 
-std::vector<std::string> AchievementManager::popUnlocked()
-{
-    auto copy = m_recent;
-    m_recent.clear();
-    return copy;
-}
-
 void AchievementManager::unlock(const std::string& id)
 {
     if (!m_save)
         return;
-    if (m_save->achievements.insert(id).second)
-        m_recent.push_back(id);
+    m_save->achievements.insert(id);
 }

@@ -8,7 +8,6 @@ public:
     void set(const std::string& title, std::vector<std::string> items);
     void up();
     void down();
-    const std::string& current() const;
     int index() const;
     void draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector2f size, const std::string& subtitle = "") const;
 

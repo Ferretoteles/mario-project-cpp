@@ -222,7 +222,6 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
                 loadLevel(std::clamp(m_selectedLevel, 1, m_adminMode ? 5 : m_save.unlockedLevel));
             } else if (choice == 1) {
                 m_save.upgrades.activeSkin = m_save.upgrades.activeSkin == "Luigi" ? "Mario" : "Luigi";
-                m_save.upgrades.skins.insert(m_save.upgrades.activeSkin);
                 m_saveManager.save(m_save);
                 setState(AppState::Title);
             } else if (choice == 2) {
@@ -386,7 +385,6 @@ bool Game::keyDown(sf::Keyboard::Key key) const
 
 void Game::setState(AppState state)
 {
-    m_previousState = m_state;
     m_state = state;
     if (state == AppState::Title)
         m_menu.set("MARIO STYLE RUN", {"Start", "Postac: " + m_save.upgrades.activeSkin, "Wybor poziomu", "Sklep", "Ustawienia", "Wyjscie"});
@@ -440,15 +438,10 @@ void Game::loadLevel(int level)
     m_items.clear();
     m_projectiles.clear();
     m_particles.clear();
-    m_currentReplay.clear();
     m_quests.resetForLevel(m_currentLevel);
     m_screenShakeTimer = 0.0f;
     m_screenShakeStrength = 0.0f;
-    m_bossHazardTimer = 0.0f;
-    m_bossSpikeTimer = 0.0f;
-    m_bossSpikeCols.clear();
     spawnFromLevel();
-    resetWeather();
     setState(AppState::Playing);
 }
 
@@ -707,8 +700,6 @@ void Game::updatePlaying(float dt)
             m_level.setTile(row, 100, bossAlive && m_castleInterior ? 'L' : '.');
             m_level.setTile(row, 144, bossAlive && m_castleInterior ? 'L' : '.');
         }
-        if (m_bossFightStarted && !bossAlive)
-            m_bossSpikeCols.clear();
     }
 
     if (m_player.hasKey() && !(m_currentLevel == 5 && bossAlive)) {
@@ -805,13 +796,6 @@ void Game::updatePlaying(float dt)
         spawnText("CHECKPOINT", m_player.center() + sf::Vector2f(0.0f, -60.0f), sf::Color(115, 210, 255));
     }
 
-    m_replayTimer += dt;
-    if (m_replayTimer > 0.12f) {
-        m_replayTimer = 0.0f;
-        if (m_currentReplay.size() < 1500)
-            m_currentReplay.push_back(m_player.center());
-    }
-
     m_autoSaveTimer += dt;
     if (m_autoSaveTimer > 20.0f) {
         m_autoSaveTimer = 0.0f;
@@ -847,19 +831,6 @@ void Game::updateParticles(float dt)
         particle.pos += particle.velocity * dt;
     }
     m_particles.erase(std::remove_if(m_particles.begin(), m_particles.end(), [](const Particle& particle) { return particle.life <= 0.0f; }), m_particles.end());
-}
-
-void Game::updateWeather(float dt)
-{
-    if (m_weather.empty())
-        return;
-    for (auto& p : m_weather) {
-        p.pos += p.velocity * dt;
-        if (p.pos.y > m_camera.y + m_worldView.getSize().y + 60.0f || p.pos.x < m_camera.x - 80.0f || p.pos.x > m_camera.x + m_worldView.getSize().x + 80.0f) {
-            p.pos.x = m_camera.x + static_cast<float>(m_rng() % static_cast<unsigned>(std::max(1.0f, m_worldView.getSize().x)));
-            p.pos.y = m_camera.y - static_cast<float>(m_rng() % 90);
-        }
-    }
 }
 
 void Game::updateCollisions()
@@ -938,10 +909,8 @@ void Game::completeLevel()
     m_save.bankCoins += m_player.coins();
     m_save.bestScore = std::max(m_save.bestScore, m_player.xp() + m_player.coins() * 10 + m_player.stats().kills * 100);
     const float oldTime = m_save.bestTimes.count(m_currentLevel) ? m_save.bestTimes[m_currentLevel] : 9999.0f;
-    if (m_player.stats().time < oldTime) {
+    if (m_player.stats().time < oldTime)
         m_save.bestTimes[m_currentLevel] = m_player.stats().time;
-        m_ghostReplay = m_currentReplay;
-    }
     m_save.bestCoins[m_currentLevel] = std::max(m_save.bestCoins[m_currentLevel], m_player.coins());
     m_saveManager.save(m_save);
     m_events.publish({EventType::LevelCompleted, m_currentLevel, "level"});
@@ -961,9 +930,6 @@ void Game::respawnOrGameOver()
         m_castlePhase = CastleCutscenePhase::None;
         m_castleDoorOpen = 0.0f;
         m_castleTimer = 0.0f;
-        m_bossHazardTimer = 0.0f;
-        m_bossSpikeTimer = 0.0f;
-        m_bossSpikeCols.clear();
         m_screenShakeTimer = 0.0f;
         m_screenShakeStrength = 0.0f;
         m_projectiles.clear();
@@ -979,9 +945,6 @@ void Game::respawnOrGameOver()
         m_castlePhase = CastleCutscenePhase::None;
         m_castleDoorOpen = 0.0f;
         m_castleTimer = 0.0f;
-        m_bossHazardTimer = 0.0f;
-        m_bossSpikeTimer = 0.0f;
-        m_bossSpikeCols.clear();
         m_screenShakeTimer = 0.0f;
         m_screenShakeStrength = 0.0f;
         m_enemies.clear();
@@ -1312,15 +1275,6 @@ void Game::drawCastleFade()
     m_window.draw(fade);
 }
 
-void Game::drawQuestPanel()
-{
-    float y = 82.0f;
-    for (const auto& quest : m_quests.quests()) {
-        drawText(std::string(quest.completed ? "[x] " : "[ ] ") + quest.title, 13, {18.0f, y}, quest.completed ? sf::Color(155, 255, 165) : sf::Color(235, 235, 235));
-        y += 18.0f;
-    }
-}
-
 void Game::drawMinimap()
 {
     const sf::Vector2f size = m_uiView.getSize();
@@ -1393,39 +1347,6 @@ void Game::drawMinimap()
     dot.setOutlineColor(sf::Color(45, 26, 20));
     dot.setOutlineThickness(1.0f);
     m_window.draw(dot);
-}
-
-void Game::drawWeather()
-{
-    for (const auto& p : m_weather) {
-        if (m_level.weather() == WeatherType::Rain || m_level.weather() == WeatherType::Storm) {
-            sf::RectangleShape drop({2.0f, 16.0f});
-            drop.setPosition(p.pos);
-            drop.setFillColor(sf::Color(165, 205, 255, 160));
-            m_window.draw(drop);
-        } else if (m_level.weather() == WeatherType::Snow) {
-            sf::CircleShape flake(2.5f, 10);
-            flake.setPosition(p.pos);
-            flake.setFillColor(sf::Color(255, 255, 255, 190));
-            m_window.draw(flake);
-        } else if (m_level.weather() == WeatherType::Meteor) {
-            sf::CircleShape meteor(5.0f, 12);
-            meteor.setPosition(p.pos);
-            meteor.setFillColor(sf::Color(255, 130, 70, 210));
-            m_window.draw(meteor);
-        } else if (m_level.weather() == WeatherType::Clear) {
-            sf::CircleShape mote(2.0f, 8);
-            mote.setPosition(p.pos);
-            mote.setFillColor(sf::Color(255, 220, 120, 120));
-            m_window.draw(mote);
-        }
-    }
-    if (m_level.weather() == WeatherType::Fog) {
-        sf::RectangleShape fog(m_worldView.getSize());
-        fog.setPosition(m_camera);
-        fog.setFillColor(sf::Color(210, 220, 230, 70));
-        m_window.draw(fog);
-    }
 }
 
 void Game::drawParticles()
@@ -1545,11 +1466,6 @@ void Game::spawnBurst(sf::Vector2f pos, sf::Color color, int count)
 void Game::spawnText(const std::string& text, sf::Vector2f pos, sf::Color color)
 {
     m_particles.push_back({pos, {0.0f, -42.0f}, color, text, 1.0f, 1.0f, 2.0f});
-}
-
-void Game::resetWeather()
-{
-    m_weather.clear();
 }
 
 std::filesystem::path Game::findAssetRoot() const

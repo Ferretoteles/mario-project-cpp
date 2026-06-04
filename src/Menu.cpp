@@ -21,12 +21,6 @@ void Menu::down()
         m_selected = (m_selected + 1) % static_cast<int>(m_items.size());
 }
 
-const std::string& Menu::current() const
-{
-    static const std::string empty;
-    return m_items.empty() ? empty : m_items[static_cast<std::size_t>(m_selected)];
-}
-
 int Menu::index() const
 {
     return m_selected;

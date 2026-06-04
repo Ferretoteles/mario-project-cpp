@@ -35,20 +35,9 @@ enum class WorldMode {
     Ghost
 };
 
-enum class WeatherType {
-    Clear,
-    Rain,
-    Snow,
-    Fog,
-    Storm,
-    Meteor
-};
-
 enum class EventType {
     CoinCollected,
     EnemyKilled,
-    PlayerJumped,
-    PlayerDied,
     LevelCompleted,
     KeyFound,
     ChestOpened,
@@ -84,7 +73,6 @@ struct UpgradeState {
     int speedLevel = 0;
     int healthLevel = 0;
     int magnetLevel = 0;
-    std::set<std::string> skins;
     std::string activeSkin = "Mario";
 };
 

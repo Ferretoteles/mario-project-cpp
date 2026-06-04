@@ -133,7 +133,6 @@ void Player::update(Level& level,
         m_jumpBuffer = 0.0f;
         m_jumpsUsed += 1;
         m_stats.jumps += 1;
-        events.publish({EventType::PlayerJumped, m_stats.jumps, doubleJump ? "double" : "normal"});
         AudioManager::instance().play(doubleJump ? "double_jump" : "jump");
     }
 
@@ -212,7 +211,6 @@ void Player::kill(EventSystem& events)
     m_dead = true;
     m_deathTimer = 0.0f;
     m_velocity = {0.0f, -520.0f};
-    events.publish({EventType::PlayerDied, m_stats.deaths, "death"});
     AudioManager::instance().play("death");
 }
 
@@ -305,11 +303,9 @@ bool Player::isFalling() const { return m_velocity.y > 80.0f; }
 bool Player::canShootFire() const { return m_fireTimer > 0.0f && !m_dead; }
 float Player::coinMagnetRadius() const { return magnetRadius(); }
 int Player::lives() const { return m_lives; }
-int Player::maxLives() const { return m_maxLives; }
 int Player::coins() const { return m_coins; }
 int Player::xp() const { return m_xp; }
 int Player::facing() const { return m_facing; }
-float Player::firePowerTimer() const { return std::max(0.0f, m_fireTimer); }
 const RunStats& Player::stats() const { return m_stats; }
 RunStats& Player::stats() { return m_stats; }
 

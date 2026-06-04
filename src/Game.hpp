@@ -23,11 +23,6 @@ struct Particle {
     float radius = 3.0f;
 };
 
-struct WeatherParticle {
-    sf::Vector2f pos;
-    sf::Vector2f velocity;
-};
-
 enum class CastleCutscenePhase {
     None,
     Opening,
@@ -76,7 +71,6 @@ private:
     void update(float dt);
     void updatePlaying(float dt);
     void updateParticles(float dt);
-    void updateWeather(float dt);
     void updateCollisions();
     void completeLevel();
     void respawnOrGameOver();
@@ -90,9 +84,7 @@ private:
     void drawDungeonStagePanel();
     void drawCastleGate();
     void drawCastleFade();
-    void drawQuestPanel();
     void drawMinimap();
-    void drawWeather();
     void drawParticles();
     void drawLevelSelect();
     void drawSettings();
@@ -104,7 +96,6 @@ private:
     void drawText(const std::string& text, unsigned size, sf::Vector2f pos, sf::Color color, bool center = false, float outline = 1.5f);
     void spawnBurst(sf::Vector2f pos, sf::Color color, int count);
     void spawnText(const std::string& text, sf::Vector2f pos, sf::Color color);
-    void resetWeather();
 
     std::filesystem::path findAssetRoot() const;
 
@@ -113,7 +104,6 @@ private:
     sf::View m_uiView;
     std::array<bool, sf::Keyboard::KeyCount> m_keys{};
     AppState m_state = AppState::Title;
-    AppState m_previousState = AppState::Title;
 
     std::filesystem::path m_assetRoot;
     AssetManager m_assets;
@@ -130,20 +120,14 @@ private:
     std::vector<std::unique_ptr<Item>> m_items;
     std::vector<Projectile> m_projectiles;
     std::vector<Particle> m_particles;
-    std::vector<WeatherParticle> m_weather;
-    std::vector<sf::Vector2f> m_currentReplay;
-    std::vector<sf::Vector2f> m_ghostReplay;
 
     WorldMode m_world = WorldMode::Normal;
     sf::Vector2f m_camera{0.0f, 0.0f};
     sf::Vector2f m_checkpoint{3.0f * Tile, 9.0f * Tile};
     std::string m_shopMessage;
-    float m_replayTimer = 0.0f;
     float m_autoSaveTimer = 0.0f;
     float m_screenShakeTimer = 0.0f;
     float m_screenShakeStrength = 0.0f;
-    float m_bossHazardTimer = 0.0f;
-    float m_bossSpikeTimer = 0.0f;
     float m_time = 0.0f;
     int m_currentLevel = 1;
     int m_selectedLevel = 1;
@@ -164,7 +148,6 @@ private:
     float m_dungeonStageTransitionTimer = 0.0f;
     float m_dungeonMessageTimer = 0.0f;
     float m_bossItemTimer = 0.0f;
-    std::vector<int> m_bossSpikeCols;
     std::string m_ending = "Hero Ending";
     std::mt19937 m_rng;
 };

@@ -45,7 +45,6 @@ public:
     int columns() const;
     float width() const;
     float height() const;
-    WeatherType weather() const;
     sf::Vector2f playerStart() const;
     sf::Vector2f flagPosition() const;
     const std::string& headline() const;
@@ -82,7 +81,6 @@ private:
     std::vector<SpawnRequest> m_itemSpawns;
     sf::Vector2f m_start{3.0f * Tile, 10.0f * Tile};
     sf::Vector2f m_flag{160.0f * Tile, 7.0f * Tile};
-    WeatherType m_weather = WeatherType::Clear;
     sf::Color m_skyTop{92, 184, 232};
     sf::Color m_skyBottom{246, 229, 180};
     std::string m_headline;

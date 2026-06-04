@@ -333,8 +333,6 @@ void ChestItem::collect(Player& player, EventSystem& events)
     m_alive = false;
 }
 
-Rarity ChestItem::rarity() const { return m_rarity; }
-
 std::unique_ptr<Item> makeItem(const SpawnRequest& spawn)
 {
     if (spawn.type == "coin")

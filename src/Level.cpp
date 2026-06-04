@@ -376,7 +376,6 @@ void Level::buildLevel1()
 {
     clear(186);
     m_start = {3.0f * Tile, 9.0f * Tile};
-    m_weather = WeatherType::Clear;
     m_skyTop = sf::Color(92, 184, 232);
     m_skyBottom = sf::Color(184, 224, 248);
     m_headline = "Wczoraj bohater uratowal pierwsza wioske.";
@@ -423,7 +422,6 @@ void Level::buildLevel2()
 {
     clear(236);
     m_start = {3.0f * Tile, 9.0f * Tile};
-    m_weather = WeatherType::Clear;
     m_skyTop = sf::Color(108, 194, 238);
     m_skyBottom = sf::Color(199, 234, 250);
     m_headline = "Gazeta: w rurach znaleziono sekretna komnate z kluczem.";
@@ -469,7 +467,6 @@ void Level::buildLevel3()
 {
     clear(232);
     m_start = {3.0f * Tile, 9.0f * Tile};
-    m_weather = WeatherType::Clear;
     m_skyTop = sf::Color(88, 178, 230);
     m_skyBottom = sf::Color(183, 223, 246);
     m_headline = "Gazeta: platformy nad dolina prowadza do sekretnej sciezki.";
@@ -526,7 +523,6 @@ void Level::buildLevel4()
 {
     clear(258);
     m_start = {3.0f * Tile, 9.0f * Tile};
-    m_weather = WeatherType::Clear;
     m_skyTop = sf::Color(90, 104, 146);
     m_skyBottom = sf::Color(164, 162, 176);
     m_headline = "Gazeta: zamek zamknal brame, ale klucz czeka w rurze.";
@@ -585,7 +581,6 @@ void Level::buildLevel5()
 {
     clear(166);
     m_start = {3.0f * Tile, 9.0f * Tile};
-    m_weather = WeatherType::Clear;
     m_skyTop = sf::Color(84, 124, 180);
     m_skyBottom = sf::Color(176, 198, 226);
     m_headline = "Gazeta: Bowser pokonany, droga do flagi zostala otwarta.";
@@ -857,7 +852,6 @@ int Level::number() const { return m_number; }
 int Level::columns() const { return m_columns; }
 float Level::width() const { return m_columns * Tile; }
 float Level::height() const { return Rows * Tile; }
-WeatherType Level::weather() const { return m_weather; }
 sf::Vector2f Level::playerStart() const { return m_start; }
 sf::Vector2f Level::flagPosition() const { return m_flag; }
 const std::string& Level::headline() const { return m_headline; }

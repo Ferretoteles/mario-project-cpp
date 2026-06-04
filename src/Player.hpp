@@ -42,11 +42,9 @@ public:
     bool canShootFire() const;
     float coinMagnetRadius() const;
     int lives() const;
-    int maxLives() const;
     int coins() const;
     int xp() const;
     int facing() const;
-    float firePowerTimer() const;
     const RunStats& stats() const;
     RunStats& stats();
 

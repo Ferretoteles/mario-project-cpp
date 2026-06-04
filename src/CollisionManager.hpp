@@ -24,6 +24,5 @@ public:
                                 bool secretsRevealed,
                                 float dt);
 
-    static bool overlaps(const sf::FloatRect& a, const sf::FloatRect& b);
     static bool tileHazardAt(const Level& level, sf::Vector2f point);
 };
