@@ -353,6 +353,7 @@ void drawCastleInteriorBackdrop(sf::RenderWindow& window, const AssetManager& as
 void Level::build(int number)
 {
     m_number = std::clamp(number, 1, 5);
+    m_activeCheckpointCol = -1;
     switch (m_number) {
     case 1:
         buildLevel1();
@@ -1136,8 +1137,13 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         else
             drawRect(window, rect, sf::Color(104, 73, 47));
     } else if (tile == 'C') {
+        const int col = static_cast<int>(std::round(rect.left / Tile));
+        const bool active = (col == m_activeCheckpointCol);
+        const sf::Color flagColor = active ? sf::Color(96, 220, 110) : sf::Color(86, 185, 245);
         drawRect(window, {rect.left + rect.width * 0.46f, rect.top - rect.height * 0.36f, 4.0f, rect.height * 1.35f}, sf::Color(240, 240, 230));
-        drawRect(window, {rect.left + rect.width * 0.53f, rect.top - rect.height * 0.28f, rect.width * 0.62f, rect.height * 0.38f}, sf::Color(86, 185, 245));
+        drawRect(window, {rect.left + rect.width * 0.53f, rect.top - rect.height * 0.28f, rect.width * 0.62f, rect.height * 0.38f}, flagColor);
+        if (active)
+            drawCircle(window, {rect.left + rect.width * 0.48f, rect.top - rect.height * 0.32f}, 3.5f, sf::Color(180, 255, 190));
     } else if (tile == 'L') {
         drawRect(window, rect, sf::Color(116, 63, 38), sf::Color(52, 32, 24));
         drawRect(window, {rect.left + 5.0f, rect.top + 4.0f, rect.width - 10.0f, rect.height - 8.0f}, sf::Color(155, 86, 48));

@@ -35,6 +35,7 @@ public:
 
     char tileAt(int row, int col) const;
     void setTile(int row, int col, char tile);
+    void setActiveCheckpoint(int col) { m_activeCheckpointCol = col; }
     sf::FloatRect tileRect(int row, int col) const;
     bool isSolidTile(char tile, WorldMode world, bool secretsRevealed) const;
     bool isHazardTile(char tile) const;
@@ -84,4 +85,5 @@ private:
     sf::Color m_skyTop{92, 184, 232};
     sf::Color m_skyBottom{246, 229, 180};
     std::string m_headline;
+    int m_activeCheckpointCol = -1;
 };

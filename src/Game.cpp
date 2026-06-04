@@ -411,6 +411,7 @@ void Game::loadLevel(int level)
     m_level.build(m_currentLevel);
     m_world = WorldMode::Normal;
     m_checkpoint = m_level.playerStart();
+    m_activeCheckpointCol = -1;
     m_player.reset(m_checkpoint, m_save);
     if (m_shopMushroomNextRun) {
         m_player.makeBig();
@@ -791,8 +792,10 @@ void Game::updatePlaying(float dt)
         completeLevel();
 
     const int checkCol = static_cast<int>(m_player.center().x / Tile);
-    if (m_level.tileAt(12, checkCol) == 'C') {
+    if (m_level.tileAt(12, checkCol) == 'C' && checkCol != m_activeCheckpointCol) {
+        m_activeCheckpointCol = checkCol;
         m_checkpoint = {checkCol * Tile, 9.0f * Tile};
+        m_level.setActiveCheckpoint(checkCol);
         spawnText("CHECKPOINT", m_player.center() + sf::Vector2f(0.0f, -60.0f), sf::Color(115, 210, 255));
     }
 

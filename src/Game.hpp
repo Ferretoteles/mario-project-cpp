@@ -124,6 +124,7 @@ private:
     WorldMode m_world = WorldMode::Normal;
     sf::Vector2f m_camera{0.0f, 0.0f};
     sf::Vector2f m_checkpoint{3.0f * Tile, 9.0f * Tile};
+    int m_activeCheckpointCol = -1;
     std::string m_shopMessage;
     float m_autoSaveTimer = 0.0f;
     float m_screenShakeTimer = 0.0f;
