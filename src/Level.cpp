@@ -561,8 +561,6 @@ void Level::buildLevel4()
     fill(12, 151, 154, '^');
     setTile(8, 112, '^');
     fill(9, 112, 112, 'B');
-    for (int row = 9; row <= 12; ++row)
-        setTile(row, 158, 'L');
     setTile(12, 66, 'C');
 
     addCoins(7, 12, 30, 2);
@@ -665,14 +663,6 @@ void Level::buildLevel5()
     addEnemy("spiny", 91, 13);
     addEnemy("shooter", 120, 13);
     addEnemy("boss", 130, 13);
-}
-
-void Level::generateBonusRoom(int seed)
-{
-    const int start = 12 + (seed % 10);
-    for (int col = start; col < start + 10; ++col)
-        addItem("coin", col, 5 + col % 3);
-    addItem("chest", start + 5, 9, 3);
 }
 
 void Level::update(float dt)
@@ -869,6 +859,7 @@ const std::string& Level::headline() const { return m_headline; }
 const std::vector<SpawnRequest>& Level::enemySpawns() const { return m_enemySpawns; }
 const std::vector<SpawnRequest>& Level::itemSpawns() const { return m_itemSpawns; }
 const std::vector<TeleportPipe>& Level::teleports() const { return m_teleports; }
+const std::vector<sf::FloatRect>& Level::secretRooms() const { return m_secretRooms; }
 std::vector<MovingPlatform>& Level::platforms() { return m_platforms; }
 const std::vector<MovingPlatform>& Level::platforms() const { return m_platforms; }
 
@@ -880,6 +871,7 @@ void Level::clear(int columns)
     m_teleports.clear();
     m_enemySpawns.clear();
     m_itemSpawns.clear();
+    m_secretRooms.clear();
 }
 
 void Level::placeFlag(int col)
@@ -893,14 +885,16 @@ void Level::placeFlag(int col)
 void Level::addSecretRoom(int startCol, sf::Vector2f returnTarget, bool keyRoom)
 {
     const int endCol = startCol + 18;
-    fill(7, startCol, endCol, 'B');
+    // Skorupa pokoju z niezniszczalnych blokow ('D') - nie da sie wybic na zewnatrz,
+    // jedyne wyjscie to rura powrotna.
+    fill(7, startCol, endCol, 'D');
     for (int col = startCol; col <= endCol; ++col) {
         setTile(13, col, 'G');
         setTile(14, col, 'D');
     }
     for (int row = 8; row <= 12; ++row) {
-        setTile(row, startCol, 'B');
-        setTile(row, endCol, 'B');
+        setTile(row, startCol, 'D');
+        setTile(row, endCol, 'D');
     }
     fill(10, startCol + 3, startCol + 7, 'B');
     setTile(9, startCol + 5, '?');
@@ -909,6 +903,8 @@ void Level::addSecretRoom(int startCol, sf::Vector2f returnTarget, bool keyRoom)
     addItem(keyRoom ? "key" : "mushroom", startCol + 9, 12);
     addItem("star", startCol + 12, 11);
     placePipe(startCol + 15, 2, 2, returnTarget);
+    // Obszar pokoju do przyciemnienia (rzedy 6-13 wzdluz calej szerokosci pokoju).
+    m_secretRooms.push_back({startCol * Tile, 6.0f * Tile, (endCol - startCol + 1) * Tile, 8.0f * Tile});
 }
 
 void Level::baseGround(const std::vector<std::pair<int, int>>& pits)
@@ -946,7 +942,9 @@ void Level::placePipe(int col, int width, int height, sf::Vector2f target, bool 
             setTile(y, x, 'p');
     }
     if (target.x >= 0.0f && target.y >= 0.0f)
-        m_teleports.push_back({{col * Tile, top * Tile, width * Tile, height * Tile}, target});
+        // Strefa wejscia siega jeden kafel ponad gardziel, by pokryc sie ze stojacym na rurze
+        // graczem - inaczej dolna krawedz gracza tylko dotyka rury (intersects() = false).
+        m_teleports.push_back({{col * Tile, (top - 1) * Tile, width * Tile, (height + 1) * Tile}, target});
     if (plant) {
         // gardziel rury: srodek u gory, skad wynurza sie roslina
         m_enemySpawns.push_back({"piranha", {(col + width * 0.5f) * Tile, top * Tile}, 0});
@@ -979,8 +977,6 @@ void Level::addItem(const std::string& type, int col, int row, int variant)
     sf::Vector2f pos{col * Tile + 4.0f, row * Tile + 4.0f};
     if (type == "mushroom" || type == "star" || type == "fireflower" || type == "key")
         pos = {col * Tile, row * Tile};
-    if (type == "chest")
-        pos = {col * Tile - 3.0f, row * Tile + 2.0f};
     m_itemSpawns.push_back({type, pos, variant});
 }
 

@@ -72,14 +72,4 @@ public:
     void collect(Player& player, EventSystem& events) override;
 };
 
-class ChestItem final : public Item {
-public:
-    ChestItem(sf::Vector2f pos, Rarity rarity);
-    void draw(sf::RenderWindow& window, const AssetManager& assets, float time) const override;
-    void collect(Player& player, EventSystem& events) override;
-
-private:
-    Rarity m_rarity = Rarity::Common;
-};
-
 std::unique_ptr<Item> makeItem(const SpawnRequest& spawn);

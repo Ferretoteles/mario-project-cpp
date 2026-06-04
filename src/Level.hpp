@@ -29,7 +29,6 @@ struct TeleportPipe {
 class Level {
 public:
     void build(int number);
-    void generateBonusRoom(int seed);
     void update(float dt);
     void draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode world, bool secretsRevealed, float time, bool castleInterior = false) const;
 
@@ -52,6 +51,7 @@ public:
     const std::vector<SpawnRequest>& enemySpawns() const;
     const std::vector<SpawnRequest>& itemSpawns() const;
     const std::vector<TeleportPipe>& teleports() const;
+    const std::vector<sf::FloatRect>& secretRooms() const;
     std::vector<MovingPlatform>& platforms();
     const std::vector<MovingPlatform>& platforms() const;
 
@@ -78,6 +78,7 @@ private:
     std::vector<std::string> m_tiles;
     std::vector<MovingPlatform> m_platforms;
     std::vector<TeleportPipe> m_teleports;
+    std::vector<sf::FloatRect> m_secretRooms;
     std::vector<SpawnRequest> m_enemySpawns;
     std::vector<SpawnRequest> m_itemSpawns;
     sf::Vector2f m_start{3.0f * Tile, 10.0f * Tile};

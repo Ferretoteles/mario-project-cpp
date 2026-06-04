@@ -16,20 +16,6 @@ sf::FloatRect bobbed(sf::FloatRect rect, ItemType type, float time, float phase)
     return rect;
 }
 
-sf::Color rarityColor(Rarity rarity)
-{
-    switch (rarity) {
-    case Rarity::Rare:
-        return sf::Color(82, 174, 255);
-    case Rarity::Epic:
-        return sf::Color(176, 94, 255);
-    case Rarity::Legendary:
-        return sf::Color(255, 186, 57);
-    default:
-        return sf::Color(210, 145, 68);
-    }
-}
-
 bool drawTextureItem(sf::RenderWindow& window, const AssetManager& assets, const std::string& textureId, sf::FloatRect rect)
 {
     const sf::Texture* texture = assets.texture(textureId);
@@ -312,31 +298,6 @@ void KeyItem::collect(Player& player, EventSystem& events)
     m_alive = false;
 }
 
-ChestItem::ChestItem(sf::Vector2f pos, Rarity rarity)
-    : Item(ItemType::Chest, {pos.x, pos.y, 38.0f, 30.0f})
-    , m_rarity(rarity)
-{
-}
-
-void ChestItem::draw(sf::RenderWindow& window, const AssetManager& assets, float) const
-{
-    m_sprite.draw(window, assets, m_rect, false, rarityColor(m_rarity));
-}
-
-void ChestItem::collect(Player& player, EventSystem& events)
-{
-    if (!player.hasKey())
-        return;
-    const int reward = m_rarity == Rarity::Legendary ? 60 : m_rarity == Rarity::Epic ? 35 : m_rarity == Rarity::Rare ? 20 : 10;
-    for (int i = 0; i < reward; ++i)
-        player.addCoin(events, 1);
-    player.addXp(reward * 3);
-    player.stats().chests += 1;
-    events.publish({EventType::ChestOpened, reward, "chest"});
-    AudioManager::instance().play("chest");
-    m_alive = false;
-}
-
 std::unique_ptr<Item> makeItem(const SpawnRequest& spawn)
 {
     if (spawn.type == "coin")
@@ -351,7 +312,5 @@ std::unique_ptr<Item> makeItem(const SpawnRequest& spawn)
         return std::make_unique<FireFlowerItem>(spawn.pos);
     if (spawn.type == "key")
         return std::make_unique<KeyItem>(spawn.pos);
-    if (spawn.type == "chest")
-        return std::make_unique<ChestItem>(spawn.pos, static_cast<Rarity>(std::clamp(spawn.variant, 0, 3)));
     return nullptr;
 }

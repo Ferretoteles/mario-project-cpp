@@ -40,7 +40,6 @@ enum class EventType {
     EnemyKilled,
     LevelCompleted,
     KeyFound,
-    ChestOpened,
     BossDefeated,
     BossLanded
 };
@@ -51,15 +50,7 @@ enum class ItemType {
     Mushroom,
     Star,
     FireFlower,
-    Key,
-    Chest
-};
-
-enum class Rarity {
-    Common,
-    Rare,
-    Epic,
-    Legendary
+    Key
 };
 
 struct GameEvent {
@@ -82,7 +73,6 @@ struct RunStats {
     int jumps = 0;
     int deaths = 0;
     int xp = 0;
-    int chests = 0;
     float time = 0.0f;
 };
 

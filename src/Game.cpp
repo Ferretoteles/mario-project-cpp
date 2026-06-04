@@ -122,13 +122,17 @@ Game::Game()
     m_achievements.attach(m_save, m_events);
     m_events.subscribe(EventType::CoinCollected, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::EnemyKilled, [this](const GameEvent& e) { m_player.stats().kills += 1; m_quests.onEvent(e, m_player.stats()); });
-    m_events.subscribe(EventType::KeyFound, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
+    m_events.subscribe(EventType::KeyFound, [this](const GameEvent& e) {
+        m_quests.onEvent(e, m_player.stats());
+        // Osiagniecie za zdobycie 2 kluczy (po jednym z sekretnych pokoi L2 i L4).
+        if (++m_keysCollected >= 2 && m_save.achievements.insert("Sekretny pokoj").second)
+            spawnText("OSIAGNIECIE: Sekretny pokoj!", m_player.center() + sf::Vector2f(0.0f, -56.0f), sf::Color(255, 220, 90));
+    });
     m_events.subscribe(EventType::BossDefeated, [this](const GameEvent& e) { m_quests.onEvent(e, m_player.stats()); });
     m_events.subscribe(EventType::BossLanded, [this](const GameEvent&) {
         m_screenShakeTimer = 0.18f;
         m_screenShakeStrength = 5.0f;
     });
-    m_events.subscribe(EventType::ChestOpened, [this](const GameEvent& e) { spawnText("CHEST +" + std::to_string(e.value), m_player.center() + sf::Vector2f(0.0f, -50.0f), sf::Color(255, 220, 90)); });
 
     AudioManager::instance().initialize(m_save.volume);
     setState(AppState::Title);
@@ -351,8 +355,6 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
     if (m_state == AppState::Editor) {
         if (key == sf::Keyboard::F2)
             setState(AppState::Playing);
-        if (key == sf::Keyboard::G)
-            m_level.generateBonusRoom(static_cast<int>(m_time * 100.0f));
         if (key == sf::Keyboard::Num1) m_editorTile = 'G';
         if (key == sf::Keyboard::Num2) m_editorTile = 'B';
         if (key == sf::Keyboard::Num3) m_editorTile = '?';
@@ -703,24 +705,6 @@ void Game::updatePlaying(float dt)
         }
     }
 
-    if (m_player.hasKey() && !(m_currentLevel == 5 && bossAlive)) {
-        bool openedDoor = false;
-        const int firstCol = static_cast<int>((m_player.rect().left - Tile) / Tile);
-        const int lastCol = static_cast<int>((rectRight(m_player.rect()) + Tile) / Tile);
-        for (int row = 7; row <= 13; ++row) {
-            for (int col = firstCol; col <= lastCol; ++col) {
-                if (m_level.tileAt(row, col) == 'L') {
-                    m_level.setTile(row, col, '.');
-                    openedDoor = true;
-                }
-            }
-        }
-        if (openedDoor) {
-            spawnText("KEY OPEN", m_player.center() + sf::Vector2f(0.0f, -56.0f), sf::Color(255, 230, 90));
-            AudioManager::instance().play("quest");
-        }
-    }
-
     std::vector<SpawnRequest> blockSpawns;
     auto playerKeys = m_keys;
     if (m_currentLevel == 5 && m_castlePhase != CastleCutscenePhase::None) {
@@ -1052,12 +1036,45 @@ void Game::drawWorld()
         projectile.draw(m_window, m_assets, m_time);
     m_player.draw(m_window, m_assets, m_time);
     drawParticles();
+    drawSecretRoomDarkness();
     m_window.setView(m_uiView);
     drawHud();
     drawDungeonStagePanel();
     drawMinimap();
     drawBossBar();
     drawCastleFade();
+}
+
+void Game::drawSecretRoomDarkness()
+{
+    const sf::Vector2f playerCenter = m_player.center();
+    bool inside = false;
+    for (const auto& room : m_level.secretRooms()) {
+        if (room.contains(playerCenter)) {
+            inside = true;
+            break;
+        }
+    }
+    if (!inside)
+        return;
+
+    // Przyciemnienie calego ekranu (a nie tylko prostokata pokoju).
+    const sf::Vector2f viewCenter = m_worldView.getCenter();
+    const sf::Vector2f viewSize = m_worldView.getSize();
+    sf::RectangleShape shade(viewSize);
+    shade.setPosition(viewCenter.x - viewSize.x * 0.5f, viewCenter.y - viewSize.y * 0.5f);
+    shade.setFillColor(sf::Color(6, 8, 22, 180));
+    m_window.draw(shade);
+
+    // Delikatna ciepla poswiata wokol gracza - klimat latarni, utrzymuje czytelnosc.
+    for (int i = 0; i < 4; ++i) {
+        const float radius = 130.0f - i * 26.0f;
+        sf::CircleShape glow(radius, 28);
+        glow.setOrigin(radius, radius);
+        glow.setPosition(playerCenter);
+        glow.setFillColor(sf::Color(255, 224, 150, 26));
+        m_window.draw(glow);
+    }
 }
 
 void Game::drawHud()
@@ -1417,7 +1434,7 @@ void Game::drawNewspaper()
     drawText("Monety: " + std::to_string(m_player.coins()) + "  Wrogowie: " + std::to_string(m_player.stats().kills) + "  Czas: " + std::to_string(static_cast<int>(m_player.stats().time)) + "s", 18, {120.0f, 220.0f}, sf::Color(55, 42, 32), false, 0.0f);
     const int score = m_player.coins() * 10 + m_player.stats().kills * 100 - static_cast<int>(m_player.stats().time) * 2 - m_player.stats().deaths * 120;
     const std::string rank = score > 2200 ? "S" : score > 1600 ? "A" : score > 1000 ? "B" : score > 550 ? "C" : "D";
-    drawText("Ranga: " + rank + "  Sekrety/skrzynie: " + std::to_string(m_player.stats().chests) + "  Zgony: " + std::to_string(m_player.stats().deaths), 18, {120.0f, 260.0f}, sf::Color(55, 42, 32), false, 0.0f);
+    drawText("Ranga: " + rank + "  Sekret: " + std::string(m_player.hasKey() ? "znaleziony" : "-") + "  Zgony: " + std::to_string(m_player.stats().deaths), 18, {120.0f, 260.0f}, sf::Color(55, 42, 32), false, 0.0f);
     drawText("Zakonczenie teraz: " + m_ending, 18, {120.0f, 300.0f}, sf::Color(55, 42, 32), false, 0.0f);
     drawText("ENTER - dalej", 22, {m_uiView.getSize().x * 0.5f, m_uiView.getSize().y - 100.0f}, sf::Color(55, 42, 32), true, 0.0f);
 }
@@ -1438,7 +1455,7 @@ void Game::drawVictory()
 
 void Game::drawEditor()
 {
-    drawText("EDITOR: lewy klik stawia, prawy usuwa, 1-7 tile, G bonus room, F2 gra. Tile: " + std::string(1, m_editorTile), 15, {18.0f, m_uiView.getSize().y - 28.0f}, sf::Color(255, 245, 170));
+    drawText("EDITOR: lewy klik stawia, prawy usuwa, 1-7 tile, F2 gra. Tile: " + std::string(1, m_editorTile), 15, {18.0f, m_uiView.getSize().y - 28.0f}, sf::Color(255, 245, 170));
 }
 
 void Game::drawText(const std::string& text, unsigned size, sf::Vector2f pos, sf::Color color, bool center, float outline)
