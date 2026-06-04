@@ -368,7 +368,8 @@ void Spiny::draw(sf::RenderWindow& window, const AssetManager& assets, float) co
     if (m_alive) {
         for (int i = 0; i < 3; ++i) {
             sf::ConvexShape spike(3);
-            const float x = m_rect.left + 7.0f + i * 8.0f;
+            // czubki kolcow symetrycznie wokol srodka skorupy (8/16/24 przy szerokosci 32)
+            const float x = m_rect.left + 4.0f + i * 8.0f;
             spike.setPoint(0, {x, m_rect.top + 7.0f});
             spike.setPoint(1, {x + 4.0f, m_rect.top - 3.0f});
             spike.setPoint(2, {x + 8.0f, m_rect.top + 7.0f});

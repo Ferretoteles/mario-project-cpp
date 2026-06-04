@@ -288,6 +288,11 @@ void Player::giveFireFlower(float seconds)
     AudioManager::instance().play("power");
 }
 
+void Player::clearStarPower()
+{
+    m_starTimer = 0.0f;
+}
+
 void Player::giveKey()
 {
     m_hasKey = true;

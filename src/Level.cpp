@@ -588,13 +588,13 @@ void Level::buildLevel4()
 
 void Level::buildLevel5()
 {
-    clear(166);
+    clear(150);
     m_start = {3.0f * Tile, 9.0f * Tile};
     m_skyTop = sf::Color(84, 124, 180);
     m_skyBottom = sf::Color(176, 198, 226);
     m_headline = "Gazeta: Bowser pokonany, droga do flagi zostala otwarta.";
     baseGround({{25, 29}, {55, 60}, {85, 88}});
-    placeFlag(154);
+    placeFlag(147);
 
     fill(9, 10, 16, 'B');
     setTile(9, 17, '?');

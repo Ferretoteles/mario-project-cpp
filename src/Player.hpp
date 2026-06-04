@@ -30,6 +30,7 @@ public:
     void makeBig();
     void giveStar(float seconds);
     void giveFireFlower(float seconds);
+    void clearStarPower();
     void giveKey();
 
     sf::FloatRect rect() const;

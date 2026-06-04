@@ -586,10 +586,19 @@ void Game::setupDungeonStage(DungeonStage stage, bool movePlayer)
         addItemSpawn(makeSpawn("star", 116, 8));
         addItemSpawn(makeSpawn("star", 125, 6));
     } else if (stage == DungeonStage::Monsters) {
-        if (auto enemy = makeEnemy(makeSpawn("goomba", 109, 13)))
-            m_enemies.push_back(std::move(enemy));
-        if (auto enemy = makeEnemy(makeSpawn("koopa", 137, 13)))
-            m_enemies.push_back(std::move(enemy));
+        // Koniec nietykalnosci z gwiazdek zebranych w etapie 1 - walka ma byc uczciwa.
+        m_player.clearStarPower();
+        const std::array<SpawnRequest, 6> mobs{{
+            makeSpawn("goomba", 107, 13),
+            makeSpawn("koopa", 114, 13),
+            makeSpawn("runner", 121, 13),
+            makeSpawn("goomba", 129, 13),
+            makeSpawn("koopa", 136, 13),
+            makeSpawn("flyer", 122, 9),
+        }};
+        for (const auto& mob : mobs)
+            if (auto enemy = makeEnemy(mob))
+                m_enemies.push_back(std::move(enemy));
     }
 
     m_checkpoint = dungeonStageStart(stage);
@@ -614,7 +623,7 @@ std::string Game::dungeonStageText() const
     case DungeonStage::Stars:
         return "ETAP 1: Zbierz 3 gwiazdki i przejdz parkur";
     case DungeonStage::Monsters:
-        return "ETAP 2: Pokonaj 2 potwory";
+        return "ETAP 2: Pokonaj wszystkie potwory";
     case DungeonStage::BossFight:
         return "ETAP 3: Pokonaj bossa";
     default:
@@ -693,7 +702,7 @@ void Game::updatePlaying(float dt)
             m_checkpoint = bossCheckpointPosition();
             spawnText("CHECKPOINT", m_player.center() + sf::Vector2f(0.0f, -60.0f), sf::Color(115, 210, 255));
         }
-        if (bossAlive && !m_castleInterior && m_castlePhase == CastleCutscenePhase::None && m_player.center().x > 98.0f * Tile) {
+        if (bossAlive && !m_castleInterior && m_castlePhase == CastleCutscenePhase::None && m_player.center().x > 100.0f * Tile) {
             m_castlePhase = CastleCutscenePhase::Opening;
             m_castleTimer = 0.0f;
             m_castleDoorOpen = 0.0f;
