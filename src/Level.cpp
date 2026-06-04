@@ -698,7 +698,22 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
     if (dungeonInterior)
         drawCastleInteriorBackdrop(window, assets);
 
-    if (!finalBackdrop && !dungeonInterior) {
+    // Sekretne pokoje maja czarne tlo (zamiast nieba) - klimat lochu pod swiatlo latarni.
+    bool inSecret = false;
+    for (const auto& room : m_secretRooms) {
+        if (center.x >= room.left && center.x <= room.left + room.width) {
+            inSecret = true;
+            break;
+        }
+    }
+    if (inSecret) {
+        sf::RectangleShape backdrop({size.x, size.y});
+        backdrop.setPosition(leftWorld, center.y - size.y * 0.5f);
+        backdrop.setFillColor(sf::Color(4, 5, 12));
+        window.draw(backdrop);
+    }
+
+    if (!finalBackdrop && !dungeonInterior && !inSecret) {
         sf::VertexArray sky(sf::Quads, 4);
         sky[0].position = {leftWorld, center.y - size.y * 0.5f};
         sky[1].position = {rightWorld, center.y - size.y * 0.5f};
@@ -733,7 +748,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         drawCastleEntranceFacade(window, assets, groundY, castleVisibility);
     }
 
-    if (!finalBackdrop && !dungeonInterior) {
+    if (!finalBackdrop && !dungeonInterior && !inSecret) {
         const float bushOffset = -std::fmod(leftWorld * 0.18f, 220.0f);
         for (int i = -1; i < 10; ++i) {
             const float x = leftWorld + bushOffset + i * 220.0f;

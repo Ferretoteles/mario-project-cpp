@@ -1045,6 +1045,28 @@ void Game::drawWorld()
     drawCastleFade();
 }
 
+void Game::ensureLightMask()
+{
+    if (m_lightMask.getSize().x != 0)
+        return;
+    constexpr unsigned S = 256;
+    sf::Image img;
+    img.create(S, S, sf::Color(255, 255, 255, 0));
+    const float c = (S - 1) * 0.5f;
+    for (unsigned y = 0; y < S; ++y) {
+        for (unsigned x = 0; x < S; ++x) {
+            const float dx = (static_cast<float>(x) - c) / c;
+            const float dy = (static_cast<float>(y) - c) / c;
+            float a = 1.0f - std::sqrt(dx * dx + dy * dy);
+            a = std::clamp(a, 0.0f, 1.0f);
+            a = a * a; // ostrzejszy spadek - widac tylko najblizsze otoczenie
+            img.setPixel(x, y, sf::Color(255, 255, 255, static_cast<sf::Uint8>(a * 255.0f)));
+        }
+    }
+    m_lightMask.loadFromImage(img);
+    m_lightMask.setSmooth(true);
+}
+
 void Game::drawSecretRoomDarkness()
 {
     const sf::Vector2f playerCenter = m_player.center();
@@ -1058,21 +1080,39 @@ void Game::drawSecretRoomDarkness()
     if (!inside)
         return;
 
-    // Przyciemnienie calego ekranu (a nie tylko prostokata pokoju).
-    const sf::Vector2f viewCenter = m_worldView.getCenter();
-    const sf::Vector2f viewSize = m_worldView.getSize();
-    sf::RectangleShape shade(viewSize);
-    shade.setPosition(viewCenter.x - viewSize.x * 0.5f, viewCenter.y - viewSize.y * 0.5f);
-    shade.setFillColor(sf::Color(6, 8, 22, 180));
-    m_window.draw(shade);
+    ensureLightMask();
+    const sf::Vector2u winSize = m_window.getSize();
+    if (m_darkness.getSize() != winSize)
+        m_darkness.create(winSize.x, winSize.y);
 
-    // Delikatna ciepla poswiata wokol gracza - klimat latarni, utrzymuje czytelnosc.
-    for (int i = 0; i < 4; ++i) {
-        const float radius = 130.0f - i * 26.0f;
-        sf::CircleShape glow(radius, 28);
+    // Pelna ciemnosc, z ktorej maska swiatla "wycina" miekka dziure wokol gracza.
+    m_darkness.clear(sf::Color(2, 3, 10, 255));
+    const float maskR = static_cast<float>(m_lightMask.getSize().x) * 0.5f;
+    constexpr float lightRadius = 150.0f; // promien poswiaty w pikselach
+    const sf::Vector2i pixel = m_window.mapCoordsToPixel(playerCenter, m_worldView);
+    sf::Sprite light(m_lightMask);
+    light.setOrigin(maskR, maskR);
+    light.setPosition(static_cast<float>(pixel.x), static_cast<float>(pixel.y));
+    light.setScale(lightRadius / maskR, lightRadius / maskR);
+    // Mnozy alfe ciemnosci przez (1 - alfa maski): srodek maski -> przezroczysto, brzeg -> ciemno.
+    sf::RenderStates states;
+    states.blendMode = sf::BlendMode(sf::BlendMode::Zero, sf::BlendMode::One, sf::BlendMode::Add,
+                                     sf::BlendMode::Zero, sf::BlendMode::OneMinusSrcAlpha, sf::BlendMode::Add);
+    m_darkness.draw(light, states);
+    m_darkness.display();
+
+    // Nakladka ciemnosci na caly ekran.
+    m_window.setView(m_window.getDefaultView());
+    m_window.draw(sf::Sprite(m_darkness.getTexture()));
+
+    // Ciepla poswiata latarni nad odsloniety obszarem.
+    m_window.setView(m_worldView);
+    for (int i = 0; i < 3; ++i) {
+        const float radius = 110.0f - i * 28.0f;
+        sf::CircleShape glow(radius, 30);
         glow.setOrigin(radius, radius);
         glow.setPosition(playerCenter);
-        glow.setFillColor(sf::Color(255, 224, 150, 26));
+        glow.setFillColor(sf::Color(255, 210, 140, 20));
         m_window.draw(glow);
     }
 }

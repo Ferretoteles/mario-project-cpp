@@ -87,6 +87,7 @@ private:
     void drawMinimap();
     void drawParticles();
     void drawSecretRoomDarkness();
+    void ensureLightMask();
     void drawLevelSelect();
     void drawSettings();
     void drawShop();
@@ -103,6 +104,8 @@ private:
     sf::RenderWindow m_window;
     sf::View m_worldView;
     sf::View m_uiView;
+    sf::RenderTexture m_darkness;
+    sf::Texture m_lightMask;
     std::array<bool, sf::Keyboard::KeyCount> m_keys{};
     AppState m_state = AppState::Title;
 
