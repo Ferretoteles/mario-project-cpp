@@ -98,59 +98,63 @@ void drawPixelStar(sf::RenderWindow& window, sf::FloatRect rect)
 
 void drawPixelFireFlower(sf::RenderWindow& window, sf::FloatRect rect)
 {
-    static constexpr const char* pattern[16] = {
-        ".....XXXXXX.....",
-        "....XRRRRRRX....",
-        "...XROOOORRX....",
-        "...XROYYORRX....",
-        "...XROYYORRX....",
-        "...XROOOORRX....",
-        "....XRRRRRX.....",
-        "......XXXX......",
-        ".......GG.......",
-        "....LLLGGLLL....",
-        "...LL..GG..LL...",
-        "...L...GG...L...",
-        ".......GG.......",
-        ".......GG.......",
-        "......GGGG......",
-        ".....GG..GG....."
+    // Wyrazny kwiat z platkami - celowo inny od bulwiastej glowy strzelajacej rosliny (Shooter).
+    auto circle = [&](sf::Vector2f c, float r, sf::Color col, sf::Color outline = sf::Color::Transparent) {
+        sf::CircleShape s(r, 18);
+        s.setOrigin(r, r);
+        s.setPosition(c);
+        s.setFillColor(col);
+        if (outline != sf::Color::Transparent) {
+            s.setOutlineColor(outline);
+            s.setOutlineThickness(1.0f);
+        }
+        window.draw(s);
     };
 
-    const float cell = std::floor(std::min(rect.width, rect.height) / 16.0f);
-    const float spriteSize = cell * 16.0f;
-    const sf::Vector2f origin(rect.left + (rect.width - spriteSize) * 0.5f, rect.top + rect.height - spriteSize);
+    const float cx = rect.left + rect.width * 0.5f;
+    const float bloomY = rect.top + rect.height * 0.34f;
+    const float bloomR = std::min(rect.width, rect.height) * 0.17f;
+    const float petalR = bloomR * 0.85f;
+    const float ring = bloomR * 1.15f;
 
-    auto colorFor = [](char ch) {
-        switch (ch) {
-        case 'X':
-            return sf::Color(70, 43, 30);
-        case 'R':
-            return sf::Color(230, 64, 42);
-        case 'O':
-            return sf::Color(255, 146, 43);
-        case 'Y':
-            return sf::Color(255, 242, 150);
-        case 'G':
-            return sf::Color(34, 132, 56);
-        case 'L':
-            return sf::Color(83, 194, 76);
-        default:
-            return sf::Color::Transparent;
-        }
-    };
+    // lodyga
+    sf::RectangleShape stem({std::max(2.0f, rect.width * 0.10f), rect.height * 0.44f});
+    stem.setPosition(cx - stem.getSize().x * 0.5f, bloomY);
+    stem.setFillColor(sf::Color(46, 150, 60));
+    stem.setOutlineColor(sf::Color(26, 96, 40));
+    stem.setOutlineThickness(1.0f);
+    window.draw(stem);
 
-    for (int y = 0; y < 16; ++y) {
-        for (int x = 0; x < 16; ++x) {
-            const sf::Color color = colorFor(pattern[y][x]);
-            if (color == sf::Color::Transparent)
-                continue;
-            sf::RectangleShape px({cell + 0.5f, cell + 0.5f});
-            px.setPosition(origin.x + x * cell, origin.y + y * cell);
-            px.setFillColor(color);
-            window.draw(px);
-        }
+    // dwa liscie po bokach lodygi
+    const float ly = rect.top + rect.height * 0.64f;
+    sf::ConvexShape leafL(3);
+    leafL.setPoint(0, {cx, ly});
+    leafL.setPoint(1, {rect.left + rect.width * 0.16f, ly - rect.height * 0.06f});
+    leafL.setPoint(2, {cx, ly + rect.height * 0.12f});
+    leafL.setFillColor(sf::Color(72, 182, 82));
+    leafL.setOutlineColor(sf::Color(34, 110, 46));
+    leafL.setOutlineThickness(1.0f);
+    window.draw(leafL);
+    sf::ConvexShape leafR(3);
+    leafR.setPoint(0, {cx, ly});
+    leafR.setPoint(1, {rect.left + rect.width * 0.84f, ly - rect.height * 0.06f});
+    leafR.setPoint(2, {cx, ly + rect.height * 0.12f});
+    leafR.setFillColor(sf::Color(72, 182, 82));
+    leafR.setOutlineColor(sf::Color(34, 110, 46));
+    leafR.setOutlineThickness(1.0f);
+    window.draw(leafR);
+
+    // 6 platkow wokol srodka - czerwone z kremowym wnetrzem
+    for (int i = 0; i < 6; ++i) {
+        const float a = i * (3.14159265f * 2.0f / 6.0f) - 3.14159265f * 0.5f;
+        const sf::Vector2f p(cx + std::cos(a) * ring, bloomY + std::sin(a) * ring);
+        circle(p, petalR, sf::Color(228, 70, 52), sf::Color(150, 32, 34));
+        circle(p, petalR * 0.5f, sf::Color(255, 226, 196));
     }
+
+    // zlote oczko kwiatu z ciemnym srodkiem
+    circle({cx, bloomY}, bloomR, sf::Color(255, 198, 64), sf::Color(196, 130, 30));
+    circle({cx, bloomY}, bloomR * 0.5f, sf::Color(120, 70, 30));
 }
 }
 

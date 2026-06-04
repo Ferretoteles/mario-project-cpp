@@ -485,7 +485,7 @@ void Level::buildLevel3()
     fill(5, 128, 145, 'B');
     setTile(4, 137, '?');
     fill(8, 162, 170, 'B');
-    setTile(7, 166, '?');
+    setTile(7, 165, '?');
     fill(7, 194, 201, 'B');
     setTile(6, 198, '?');
     placePipe(112, 2, 2, {-1.0f, -1.0f}, true);
@@ -504,15 +504,20 @@ void Level::buildLevel3()
     addCoins(7, 162, 180, 2);
     addCoins(6, 194, 212, 2);
     addItem("star", 50, 4);
-    addItem("mushroom", 166, 7);
-    addEnemy("goomba", 20, 13);
-    addEnemy("koopa", 53, 13);
-    addEnemy("goomba", 80, 13);
-    addEnemy("flyer", 96, 9);
-    addEnemy("flyer", 136, 7);
-    addEnemy("runner", 160, 13);
-    addEnemy("shooter", 190, 9);
-    addEnemy("spiny", 205, 13);
+    addItem("mushroom", 165, 6);
+    addEnemy("goomba", 20, 13);   // wprowadzenie
+    addEnemy("koopa", 34, 13);    // patrol miedzy przepasciami
+    addEnemy("flyer", 61, 10);    // krazy nad przepascia 58-64
+    addEnemy("goomba", 70, 13);   // pilnuje ladowania za trampolina (67)
+    addEnemy("koopa", 87, 13);    // tuz za kolcami 82-85
+    addEnemy("flyer", 96, 9);     // nad przepascia 98-105
+    addEnemy("spiny", 110, 13);   // w parze z piranha z rury (112)
+    addEnemy("runner", 135, 13);  // szarza w strone przepasci 142-148
+    addEnemy("flyer", 136, 7);    // wsparcie z powietrza
+    addEnemy("koopa", 152, 13);   // przy kolcach 154-156
+    addEnemy("goomba", 167, 13);  // pilnuje grzyba (165)
+    addEnemy("shooter", 195, 7);  // poprawione przy platformie
+    addEnemy("spiny", 205, 13);   // przy schodach do flagi
     m_platforms.push_back({{36.0f * Tile, 8.2f * Tile, 3.5f * Tile, 16.0f}, {}, 33.0f * Tile, 43.0f * Tile, 100.0f, 1, false});
     m_platforms.push_back({{66.0f * Tile, 7.0f * Tile, 3.2f * Tile, 16.0f}, {}, 63.0f * Tile, 72.0f * Tile, 115.0f, -1, false});
     m_platforms.push_back({{104.0f * Tile, 6.7f * Tile, 3.0f * Tile, 16.0f}, {}, 100.0f * Tile, 116.0f * Tile, 120.0f, 1, false});
@@ -539,7 +544,7 @@ void Level::buildLevel4()
     setTile(6, 98, '?');
     fill(8, 128, 136, 'B');
     fill(7, 168, 176, 'B');
-    setTile(6, 172, '?');
+    setTile(6, 173, '?');
     fill(8, 192, 201, 'B');
     placePipe(55, 2, 3, {234.0f * Tile, 10.0f * Tile});
     addSecretRoom(230, {59.0f * Tile, 10.0f * Tile}, true);
@@ -567,15 +572,20 @@ void Level::buildLevel4()
     addCoins(5, 168, 188, 2);
     addCoins(6, 192, 204, 2);
     addItem("mushroom", 99, 5);
-    addItem("star", 172, 6);
-    addEnemy("goomba", 26, 13);
-    addEnemy("koopa", 63, 13);
-    addEnemy("shooter", 88, 9);
-    addEnemy("spiny", 118, 13);
-    addEnemy("koopa", 146, 13);
-    addEnemy("runner", 166, 13);
-    addEnemy("flyer", 186, 8);
-    addEnemy("shooter", 198, 9);
+    addItem("star", 173, 5);
+    addEnemy("goomba", 18, 13);   // wprowadzenie
+    addEnemy("koopa", 28, 13);    // dojscie do kolcow 31-34
+    addEnemy("flyer", 40, 10);    // nad przepascia z lawa 37-42
+    addEnemy("koopa", 63, 13);    // srodkowy odcinek
+    addEnemy("runner", 74, 13);   // szarza w strone przepasci 77-82
+    addEnemy("shooter", 88, 13);  // dzialo
+    addEnemy("spiny", 105, 13);   // w parze z piranha z rury (107)
+    addEnemy("goomba", 120, 13);  // odcinek przed przepascia 132-137
+    addEnemy("flyer", 135, 8);    // nad przepascia z lawa 132-137
+    addEnemy("koopa", 142, 13);   // przed kolcami 151-154 (zdjety z rury 146)
+    addEnemy("runner", 166, 13);  // szybki przeciwnik
+    addEnemy("flyer", 186, 8);    // nad przepascia 183-187
+    addEnemy("shooter", 198, 8);  // stoi na schodach
 }
 
 void Level::buildLevel5()
@@ -599,7 +609,7 @@ void Level::buildLevel5()
     fill(9, 94, 102, 'B');
     setTile(8, 98, '?');
     fill(7, 113, 119, 'B');
-    setTile(6, 116, '?');
+    setTile(6, 115, '?');
     for (int row = 8; row <= 12; ++row)
         setTile(row, 144, 'L');
 
@@ -648,12 +658,12 @@ void Level::buildLevel5()
     addCoins(7, 66, 82, 2);
     addCoins(6, 112, 126, 2);
     addItem("mushroom", 69, 7);
-    addItem("star", 116, 6);
+    addItem("star", 115, 5);
     addEnemy("goomba", 18, 13);
     addEnemy("koopa", 51, 13);
     addEnemy("runner", 72, 13);
     addEnemy("spiny", 91, 13);
-    addEnemy("shooter", 120, 9);
+    addEnemy("shooter", 120, 13);
     addEnemy("boss", 130, 13);
 }
 
