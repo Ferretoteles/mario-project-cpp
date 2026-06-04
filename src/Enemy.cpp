@@ -175,8 +175,7 @@ void Flyer::draw(sf::RenderWindow& window, const AssetManager& assets, float) co
 Shooter::Shooter(sf::Vector2f pos)
     : Enemy({pos.x, pos.y - 42.0f, 32.0f, 42.0f}, 2)
 {
-    m_sprite.addAnimation("shoot", {"mario_enemies", {Sprites::enemyFrame("piranha", 0), Sprites::enemyFrame("piranha", 1)}, 4.0f, true});
-    m_sprite.play("shoot");
+    // Rysowana proceduralnie w Shooter::draw - nie korzysta z atlasu sprite'ow.
 }
 
 void Shooter::update(Level& level, Player& player, std::vector<Projectile>& projectiles, EventSystem&, WorldMode world, float dt)
@@ -187,7 +186,6 @@ void Shooter::update(Level& level, Player& player, std::vector<Projectile>& proj
         m_deadTimer += dt;
         return;
     }
-    m_sprite.update(dt);
     m_direction = player.center().x < rectCenter(m_rect).x ? -1 : 1;
     m_aiTimer += dt;
     if (m_aiTimer > 2.0f) {
@@ -199,9 +197,91 @@ void Shooter::update(Level& level, Player& player, std::vector<Projectile>& proj
 
 std::string Shooter::name() const { return "Shooter"; }
 
-void Shooter::draw(sf::RenderWindow& window, const AssetManager& assets, float) const
+void Shooter::draw(sf::RenderWindow& window, const AssetManager& assets, float time) const
 {
-    Enemy::draw(window, assets, 0.0f);
+    (void)assets;
+
+    auto fillRect = [&](sf::FloatRect rc, sf::Color c, sf::Color outline = sf::Color::Transparent) {
+        sf::RectangleShape s({rc.width, rc.height});
+        s.setPosition(rc.left, rc.top);
+        s.setFillColor(c);
+        if (outline != sf::Color::Transparent) {
+            s.setOutlineColor(outline);
+            s.setOutlineThickness(1.5f);
+        }
+        window.draw(s);
+    };
+    auto fillCircle = [&](sf::Vector2f pos, float radius, sf::Color c, sf::Color outline = sf::Color::Transparent) {
+        sf::CircleShape s(radius, 24);
+        s.setOrigin(radius, radius);
+        s.setPosition(pos);
+        s.setFillColor(c);
+        if (outline != sf::Color::Transparent) {
+            s.setOutlineColor(outline);
+            s.setOutlineThickness(1.5f);
+        }
+        window.draw(s);
+    };
+
+    const sf::FloatRect r = m_rect;
+    const float cx = r.left + r.width * 0.5f;
+    const float baseY = rectBottom(r);
+
+    // po smierci - splaszczona, zwiedla roslina
+    if (!m_alive) {
+        fillRect({r.left + 5.0f, baseY - 7.0f, r.width - 10.0f, 7.0f}, sf::Color(120, 52, 48), sf::Color(70, 28, 30));
+        return;
+    }
+
+    const float bob = std::sin(time * 3.0f) * 1.5f;
+    const float faceDir = m_direction > 0 ? 1.0f : -1.0f;
+
+    // donica u podstawy
+    fillRect({r.left + 6.0f, baseY - 9.0f, r.width - 12.0f, 9.0f}, sf::Color(150, 90, 60), sf::Color(90, 52, 36));
+    fillRect({r.left + 6.0f, baseY - 9.0f, r.width - 12.0f, 3.0f}, sf::Color(176, 112, 76));
+
+    // lodyga
+    const float stemTop = r.top + 14.0f + bob;
+    fillRect({cx - 3.0f, stemTop, 6.0f, baseY - 7.0f - stemTop}, sf::Color(56, 150, 64), sf::Color(28, 96, 40));
+
+    // dwa liscie u nasady lodygi
+    sf::ConvexShape leafL(3);
+    leafL.setPoint(0, {cx - 2.0f, baseY - 18.0f + bob});
+    leafL.setPoint(1, {r.left + 2.0f, baseY - 26.0f + bob});
+    leafL.setPoint(2, {cx - 2.0f, baseY - 9.0f + bob});
+    leafL.setFillColor(sf::Color(70, 178, 80));
+    leafL.setOutlineColor(sf::Color(34, 110, 46));
+    leafL.setOutlineThickness(1.0f);
+    window.draw(leafL);
+    sf::ConvexShape leafR(3);
+    leafR.setPoint(0, {cx + 2.0f, baseY - 18.0f + bob});
+    leafR.setPoint(1, {r.left + r.width - 2.0f, baseY - 26.0f + bob});
+    leafR.setPoint(2, {cx + 2.0f, baseY - 9.0f + bob});
+    leafR.setFillColor(sf::Color(70, 178, 80));
+    leafR.setOutlineColor(sf::Color(34, 110, 46));
+    leafR.setOutlineThickness(1.0f);
+    window.draw(leafR);
+
+    // bulwiasta glowa - czerwono-pomaranczowa, pasuje do pomaranczowych pociskow
+    const sf::Vector2f head(cx, r.top + 11.0f + bob);
+    fillCircle(head, 11.0f, sf::Color(206, 58, 48), sf::Color(120, 28, 30));
+    fillCircle({head.x, head.y + 2.0f}, 6.5f, sf::Color(238, 116, 66));
+    // jasne kropki
+    fillCircle({head.x - 5.0f, head.y - 4.0f}, 2.0f, sf::Color(255, 214, 130));
+    fillCircle({head.x + 4.0f, head.y - 6.0f}, 1.6f, sf::Color(255, 214, 130));
+
+    // lufa/pysk celujacy w strone gracza
+    const float muzzleX = faceDir > 0 ? head.x + 4.0f : head.x - 12.0f;
+    fillRect({muzzleX, head.y - 3.5f, 9.0f, 8.0f}, sf::Color(62, 40, 44), sf::Color(24, 16, 20));
+    // ciemny otwor pyska
+    fillCircle({head.x + faceDir * 11.5f, head.y + 0.5f}, 3.2f, sf::Color(26, 10, 14));
+    // dwa biale kly nad pyskiem
+    sf::ConvexShape fang(3);
+    fang.setPoint(0, {head.x + faceDir * 6.0f, head.y - 3.0f});
+    fang.setPoint(1, {head.x + faceDir * 9.0f, head.y - 3.0f});
+    fang.setPoint(2, {head.x + faceDir * 7.5f, head.y + 1.5f});
+    fang.setFillColor(sf::Color(245, 245, 235));
+    window.draw(fang);
 }
 
 ShadowMonster::ShadowMonster(sf::Vector2f pos)
