@@ -3,7 +3,8 @@
 #include "Level.hpp"
 
 #include <cmath>
-
+// Zbiera wszystkie obiekty stałe znajdujące się w pobliżu badanego obszaru.
+// Dzięki temu kolizje są sprawdzane tylko lokalnie, a nie dla całej mapy.
 namespace {
 std::vector<std::tuple<sf::FloatRect, int, int, int>> solidBodies(Level& level, const sf::FloatRect& area, WorldMode world, bool secretsRevealed)
 {
