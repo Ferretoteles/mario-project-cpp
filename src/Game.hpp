@@ -91,6 +91,7 @@ private:
     void drawLevelSelect();
     void drawSettings();
     void drawShop();
+    void drawAchievements();
     void drawNewspaper();
     void drawGameOver();
     void drawVictory();
