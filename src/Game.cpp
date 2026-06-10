@@ -236,6 +236,8 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             } else if (choice == 3) {
                 setState(AppState::Shop);
             } else if (choice == 4) {
+                setState(AppState::Achievements);
+            } else if (choice == 5) {
                 setState(AppState::Settings);
             } else {
                 m_window.close();
@@ -271,6 +273,13 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
         }
         AudioManager::instance().setVolume(m_save.volume);
         m_saveManager.save(m_save);
+        return;
+    }
+        if (m_state == AppState::Achievements) {
+        if (key == sf::Keyboard::Enter) {
+            AudioManager::instance().play("menu_select");
+            setState(AppState::Title);
+        }
         return;
     }
 
@@ -392,7 +401,7 @@ void Game::setState(AppState state)
 {
     m_state = state;
     if (state == AppState::Title)
-        m_menu.set("MARIO STYLE RUN", {"Start", "Postac: " + m_save.upgrades.activeSkin, "Wybor poziomu", "Sklep", "Ustawienia", "Wyjscie"});
+        m_menu.set("MARIO STYLE RUN", {"Start", "Postac: " + m_save.upgrades.activeSkin, "Wybor poziomu", "Sklep", "Osiagniecia", "Ustawienia", "Wyjscie"});
     if (state == AppState::Paused)
         m_menu.set("PAUZA", {"Resume", "Restart", "Exit"});
     if (state == AppState::Shop) {
@@ -1018,6 +1027,8 @@ void Game::render()
         drawSettings();
     else if (m_state == AppState::Shop)
         drawShop();
+    else if (m_state == AppState::Achievements)
+        drawAchievements();
     else if (m_state == AppState::Paused)
         m_menu.draw(m_window, m_assets, m_uiView.getSize(), "ENTER wybiera | P Resume | R Restart | Q Exit");
     else if (m_state == AppState::Newspaper)
@@ -1486,7 +1497,43 @@ void Game::drawShop()
     const std::string status = m_shopMessage.empty() ? "Kupione bonusy jednorazowe zadzialaja po starcie poziomu." : m_shopMessage;
     drawText(status, 15, {m_uiView.getSize().x * 0.5f, m_uiView.getSize().y - 45.0f}, sf::Color(255, 232, 150), true);
 }
+void Game::drawAchievements()
+{
+    const sf::Vector2f size = m_uiView.getSize();
+    drawText("OSIAGNIECIA", 42, {size.x * 0.5f, 78.0f}, sf::Color(255, 232, 150), true, 3.0f);
+    drawText("Odblokowane: " + std::to_string(m_save.achievements.size()) + " / 8", 18, {size.x * 0.5f, 126.0f}, sf::Color(210, 230, 255), true);
 
+    sf::RectangleShape panel({std::min(620.0f, size.x - 96.0f), 310.0f});
+    panel.setOrigin(panel.getSize().x * 0.5f, panel.getSize().y * 0.5f);
+    panel.setPosition(size.x * 0.5f, size.y * 0.53f);
+    panel.setFillColor(sf::Color(24, 38, 74, 220));
+    panel.setOutlineColor(sf::Color(252, 225, 92, 190));
+    panel.setOutlineThickness(2.0f);
+    m_window.draw(panel);
+
+    const std::array<std::string, 8> achievements = {
+        "Pierwsza moneta",
+        "Pogromca potworow",
+        "Lowca bossow",
+        "Zbierz 100 monet",
+        "Bez smierci",
+        "Akrobata",
+        "Koniec wyprawy",
+        "Sekretny pokoj"
+    };
+
+    const float left = panel.getPosition().x - panel.getSize().x * 0.5f + 48.0f;
+    const float top = panel.getPosition().y - panel.getSize().y * 0.5f + 42.0f;
+    for (int i = 0; i < static_cast<int>(achievements.size()); ++i) {
+        const std::string& name = achievements[static_cast<std::size_t>(i)];
+        const bool unlocked = m_save.achievements.count(name) > 0;
+        const sf::Color color = unlocked ? sf::Color(255, 244, 180) : sf::Color(132, 150, 178);
+        const std::string prefix = unlocked ? "[X] " : "[ ] ";
+        drawText(prefix + name, 19, {left, top + i * 31.0f}, color, false, 1.4f);
+    }
+
+    drawText("ENTER lub ESC - powrot", 17, {size.x * 0.5f, size.y - 54.0f}, sf::Color(210, 230, 255), true);
+}
 void Game::drawNewspaper()
 {
     sf::RectangleShape paper({m_uiView.getSize().x - 160.0f, m_uiView.getSize().y - 120.0f});
