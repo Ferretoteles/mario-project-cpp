@@ -9,7 +9,6 @@
 #include <fstream>
 // Oblicza odległość między dwoma punktami.
 // Używane np. przy sprawdzaniu dystansu między graczem a obiektami gry.
-float distance(sf::Vector2f a, sf::Vector2f b)
 namespace {
 float distance(sf::Vector2f a, sf::Vector2f b)
 {
