@@ -10,7 +10,9 @@
 namespace {
 constexpr float Gravity = 1850.0f;
 }
-
+// Resetuje stan gracza po rozpoczęciu nowej gry lub poziomu.
+// Ustawiane są podstawowe parametry, takie jak życia, monety,
+// pozycja startowa, prędkość oraz aktywne ulepszenia.
 void Player::reset(sf::Vector2f start, const SaveData& save)
 {
     m_upgrades = save.upgrades;
@@ -40,7 +42,8 @@ void Player::reset(sf::Vector2f start, const SaveData& save)
     m_stats = {};
     updateSpriteAnimation();
 }
-
+// Przywraca gracza na pozycję startową po utracie życia.
+// Część danych, np. monety i doświadczenie, zostaje zachowana.
 void Player::respawn(sf::Vector2f start)
 {
     const int lives = m_lives;
@@ -68,7 +71,8 @@ void Player::respawn(sf::Vector2f start)
     configureSprites();
     updateSpriteAnimation();
 }
-
+// Główna aktualizacja gracza wykonywana w każdej klatce gry.
+// Obsługuje ruch, skok, grawitację, kolizje, bonusy oraz interakcje z poziomem.
 void Player::update(Level& level,
                     const std::array<bool, sf::Keyboard::KeyCount>& keys,
                     EventSystem& events,
