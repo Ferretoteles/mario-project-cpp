@@ -1382,6 +1382,20 @@ void Game::drawMinimap()
     progress.setPosition(trackX, trackY);
     progress.setFillColor(sf::Color(104, 194, 255, 225));
     m_window.draw(progress);
+    if (m_activeCheckpointCol >= 0) {
+        const float checkpointWorldX = (static_cast<float>(m_activeCheckpointCol) + 0.5f) * Tile;
+        const float checkpointX = std::clamp(checkpointWorldX / levelWidth, 0.0f, 1.0f);
+        const sf::Vector2f checkpointPos(trackX + checkpointX * trackW, trackY + 2.5f);
+
+        sf::CircleShape checkpoint(5.0f, 4);
+        checkpoint.setOrigin(5.0f, 5.0f);
+        checkpoint.setPosition(checkpointPos);
+        checkpoint.setRotation(45.0f);
+        checkpoint.setFillColor(sf::Color(115, 210, 255));
+        checkpoint.setOutlineColor(sf::Color(20, 35, 55));
+        checkpoint.setOutlineThickness(1.0f);
+        m_window.draw(checkpoint);
+    }
 
     sf::ConvexShape flag(3);
     const float flagPosX = trackX + flagX * trackW;
