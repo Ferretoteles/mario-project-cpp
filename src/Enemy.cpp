@@ -15,7 +15,9 @@ Enemy::Enemy(sf::FloatRect rect, int hp, int direction)
     , m_direction(direction)
 {
 }
-
+// Aktualizuje zachowanie przeciwnika.
+// Jeśli przeciwnik żyje, porusza się po planszy i reaguje na kolizje.
+// Jeśli został pokonany, odliczany jest czas do jego usunięcia.
 void Enemy::update(Level& level, Player&, std::vector<Projectile>&, EventSystem&, WorldMode world, float dt)
 {
     if (!m_alive) {
@@ -33,14 +35,16 @@ void Enemy::draw(sf::RenderWindow& window, const AssetManager& assets, float) co
     const sf::FloatRect target = m_alive ? m_rect : sf::FloatRect(m_rect.left, rectBottom(m_rect) - 12.0f, m_rect.width, 12.0f);
     m_sprite.draw(window, assets, target, m_direction > 0);
 }
-
+// Obsługuje sytuację, gdy gracz skacze na przeciwnika.
+// Przeciwnik otrzymuje obrażenia, a gracz zostaje odbity do gór
 bool Enemy::stomp(Player& player, EventSystem& events)
 {
     damage(1, events);
     player.bounce();
     return !m_alive;
 }
-
+// Odejmuje punkty życia przeciwnikowi.
+// Po spadku życia do zera przeciwnik przestaje być aktywny i wysyłane jest zdarzenie zabicia.
 void Enemy::damage(int value, EventSystem& events)
 {
     if (!m_alive)
@@ -65,7 +69,8 @@ sf::FloatRect Enemy::rect() const { return m_rect; }
 bool Enemy::alive() const { return m_alive; }
 bool Enemy::readyToRemove() const { return !m_alive && m_deadTimer > 0.35f; }
 bool Enemy::harmful() const { return m_harmful && m_alive; }
-
+// Prosty algorytm ruchu przeciwnika.
+// Przeciwnik idzie w jednym kierunku, a po wykryciu ściany lub krawędzi zawraca.
 void Enemy::walk(Level& level, WorldMode world, bool secretsRevealed, float speed, float dt)
 {
     m_aiTimer += dt;
