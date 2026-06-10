@@ -7,7 +7,9 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
-
+// Oblicza odległość między dwoma punktami.
+// Używane np. przy sprawdzaniu dystansu między graczem a obiektami gry.
+float distance(sf::Vector2f a, sf::Vector2f b)
 namespace {
 float distance(sf::Vector2f a, sf::Vector2f b)
 {
@@ -44,7 +46,8 @@ void drawHeartShape(sf::RenderWindow& window, sf::Vector2f pos, float size, sf::
     drawCirclePart({-size * 0.21f, -size * 0.05f}, color);
     drawCirclePart({size * 0.21f, -size * 0.05f}, color);
 }
-
+// Rysuje ikonę serca w interfejsie gracza.
+// Jeśli dostępna jest tekstura, zostaje użyta grafika, a w przeciwnym razie rysowany jest prosty kształt.
 void drawHeartIcon(sf::RenderWindow& window, const AssetManager& assets, sf::Vector2f pos, float size, bool filled)
 {
     const sf::Color color = filled ? sf::Color(245, 74, 96) : sf::Color(73, 77, 94);
