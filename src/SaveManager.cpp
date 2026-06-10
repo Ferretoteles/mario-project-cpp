@@ -32,6 +32,9 @@ SaveData SaveManager::load(int slot) const
     data.upgrades.speedLevel = readInt(json, "speedLevel", 0);
     data.upgrades.healthLevel = readInt(json, "healthLevel", 0);
     data.upgrades.magnetLevel = readInt(json, "magnetLevel", 0);
+    data.upgrades.activeSkin = readString(json, "activeSkin", data.upgrades.activeSkin);
+    if (data.upgrades.activeSkin != "Luigi")
+        data.upgrades.activeSkin = "Mario";
 
     std::regex completedRegex(R"("completedLevels"\s*:\s*\[([^\]]*)\])");
     std::smatch match;
@@ -79,6 +82,7 @@ void SaveManager::save(const SaveData& data) const
     file << "  \"speedLevel\": " << data.upgrades.speedLevel << ",\n";
     file << "  \"healthLevel\": " << data.upgrades.healthLevel << ",\n";
     file << "  \"magnetLevel\": " << data.upgrades.magnetLevel << ",\n";
+    file << "  \"activeSkin\": \"" << (data.upgrades.activeSkin == "Luigi" ? "Luigi" : "Mario") << "\",\n";
 
     for (int level = 1; level <= 5; ++level) {
         const auto time = data.bestTimes.count(level) ? data.bestTimes.at(level) : 9999.0f;
@@ -129,5 +133,13 @@ float SaveManager::readFloat(const std::string& json, const std::string& key, fl
     std::smatch match;
     if (std::regex_search(json, match, regex))
         return std::stof(match[1].str());
+    return fallback;
+}
+std::string SaveManager::readString(const std::string& json, const std::string& key, const std::string& fallback)
+{
+    std::regex regex("\"" + key + "\"\\s*:\\s*\"([^\"]*)\"");
+    std::smatch match;
+    if (std::regex_search(json, match, regex))
+        return match[1].str();
     return fallback;
 }
