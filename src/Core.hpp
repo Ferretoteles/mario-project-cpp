@@ -24,6 +24,7 @@ enum class AppState {
     Playing,
     Paused,
     Shop,
+    Achievements,
     Newspaper,
     GameOver,
     Victory,
