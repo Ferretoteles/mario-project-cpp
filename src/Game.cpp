@@ -274,7 +274,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
         m_saveManager.save(m_save);
         return;
     }
-        if (m_state == AppState::Achievements) {
+    if (m_state == AppState::Achievements) {
         if (key == sf::Keyboard::Enter) {
             AudioManager::instance().play("menu_select");
             setState(AppState::Title);
