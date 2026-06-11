@@ -15,6 +15,7 @@ public:
 private:
     std::filesystem::path slotPath(int slot) const;
     static int readInt(const std::string& json, const std::string& key, int fallback);
+    static float readFloat(const std::string& json, const std::string& key, float fallback);
     static std::string readString(const std::string& json, const std::string& key, const std::string& fallback);
 
     std::filesystem::path m_root;
