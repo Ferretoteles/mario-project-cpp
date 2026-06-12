@@ -164,6 +164,7 @@ struct LevelVisualAssets {
 enum class TerrainSprite {
     TopLeft,
     Top,
+    LongTop,
     TopRight,
     Inner,
     InnerAlt,
@@ -174,9 +175,103 @@ enum class TerrainSprite {
     Question
 };
 
+enum class LevelTheme {
+    Grass,
+    Desert,
+    Ice,
+    Castle,
+    Lava
+};
+
+struct ThemeTileRects {
+    sf::IntRect top;
+    sf::IntRect longTop;
+    sf::IntRect inner1;
+    sf::IntRect inner2;
+    sf::IntRect cracked;
+    sf::IntRect leftEdge;
+    sf::IntRect rightEdge;
+    sf::IntRect decorativeTop;
+    sf::IntRect floatingIsland;
+    sf::IntRect question;
+};
+
 int levelThemeIndex(int levelNumber)
 {
     return levelNumber <= 0 ? 0 : (levelNumber - 1) % 5;
+}
+
+LevelTheme chooseTheme(int levelNumber)
+{
+    return static_cast<LevelTheme>(levelThemeIndex(levelNumber));
+}
+
+const ThemeTileRects& getThemeTileRects(LevelTheme theme)
+{
+    static const std::array<ThemeTileRects, 5> rects{{
+        {
+            {142, 98, 148, 248},   // grass top - zielona trawa na gorze
+            {440, 98, 900, 250},   // grass longTop - dluga platforma z trawa
+            {450, 188, 850, 140},  // grass inner1 - brazowy dirt bez zielonej gory
+            {112, 220, 210, 100},  // grass inner2 - brazowy dirt z dolnej czesci bloku
+            {1024, 430, 315, 220}, // grass cracked - pekniety brazowy dirt
+            {86, 98, 118, 248},    // grass leftEdge - lewy bok top platformy
+            {226, 98, 118, 248},   // grass rightEdge - prawy bok top platformy
+            {95, 785, 360, 230},   // grass decorativeTop - kwiaty/dekoracja na gorze
+            {1004, 802, 345, 214}, // grass floating - gotowa latajaca wyspa
+            {585, 750, 285, 280},  // grass question - zolty blok pytania
+        },
+        {
+            {142, 98, 148, 248},   // desert top - piaskowa gorna powierzchnia
+            {490, 120, 820, 250},  // desert longTop - dluga piaskowa platforma
+            {450, 188, 850, 140},  // desert inner1 - piaskowy blok bez gornej warstwy
+            {112, 220, 210, 100},  // desert inner2 - dolna czesc piaskowego bloku
+            {1006, 430, 335, 220}, // desert cracked - pekniety piaskowiec
+            {86, 98, 118, 248},    // desert leftEdge - lewa krawedz platformy
+            {226, 98, 118, 248},   // desert rightEdge - prawa krawedz platformy
+            {92, 775, 385, 240},   // desert decorativeTop - dekoracyjny top
+            {990, 800, 360, 220},  // desert floating - latajaca wyspa pustynna
+            {600, 760, 300, 285},  // desert question - specjalny blok z symbolem
+        },
+        {
+            {142, 98, 148, 248},   // ice top - lodowa/sniezna gorna powierzchnia
+            {405, 110, 620, 240},  // ice longTop - dluga lodowa platforma
+            {450, 188, 850, 140},  // ice inner1 - lodowy srodek bez snieznej gory
+            {112, 220, 210, 100},  // ice inner2 - dolna czesc lodowego bloku
+            {1006, 430, 335, 220}, // ice cracked - pekniety lodowy blok
+            {82, 105, 120, 250},   // ice leftEdge - lewa krawedz z czapa
+            {225, 105, 120, 250},  // ice rightEdge - prawa krawedz z czapa
+            {750, 505, 250, 245},  // ice decorativeTop - krysztaly jako dekoracja na gorze
+            {510, 845, 405, 130},  // ice floating - podwieszona lodowa platforma
+            {1100, 500, 270, 270}, // ice question - ozdobny blok sniezynki
+        },
+        {
+            {120, 80, 150, 190},   // castle top - kamienny gorny blok
+            {400, 80, 900, 210},   // castle longTop - dlugi kamienny most/platforma
+            {450, 170, 850, 120},  // castle inner1 - kamienny srodek bez gornej krawedzi
+            {720, 462, 300, 250},  // castle inner2 - ceglany kamienny srodek
+            {345, 455, 300, 250},  // castle cracked - pekniety kamien
+            {70, 330, 190, 320},   // castle leftEdge - boczna krawedz/schodek
+            {1120, 80, 180, 200},  // castle rightEdge - prawa krawedz dlugiej platformy
+            {1035, 335, 330, 335}, // castle decorativeTop - brama/dekoracyjny blok
+            {590, 760, 760, 255},  // castle floating - kamienna latajaca platforma
+            {92, 735, 330, 300},   // castle question - magiczny blok/symbol
+        },
+        {
+            {90, 85, 165, 300},    // lava top - lawa na gorze, ciemna skala pod spodem
+            {350, 95, 650, 285},   // lava longTop - dluga lawowa platforma
+            {360, 195, 620, 170},  // lava inner1 - ciemna skala pod lawa
+            {710, 465, 300, 250},  // lava inner2 - ciemny ceglany srodek
+            {350, 440, 300, 240},  // lava cracked - peknieta lawowa skala
+            {80, 420, 220, 320},   // lava leftEdge - lawowy bok/schodek
+            {1120, 85, 225, 270},  // lava rightEdge - prawa krawedz z lawa
+            {700, 455, 275, 250},  // lava decorativeTop - ciemny dekoracyjny blok
+            {500, 800, 420, 250},  // lava floating - wyciety spod lawowej wyspy
+            {1100, 455, 265, 280}, // lava question - blok z plomieniem/symbolem
+        },
+    }};
+
+    return rects[static_cast<std::size_t>(theme)];
 }
 
 const LevelVisualAssets& levelVisualAssets(int levelNumber)
@@ -240,41 +335,31 @@ sf::Color levelTerrainFillColor(int levelNumber)
 
 sf::IntRect levelTerrainSource(int levelNumber, TerrainSprite sprite)
 {
-    const int theme = levelThemeIndex(levelNumber);
+    const ThemeTileRects& rects = getThemeTileRects(chooseTheme(levelNumber));
     switch (sprite) {
     case TerrainSprite::TopLeft:
-        return {86, 98, 118, 248};
+        return rects.leftEdge;
+    case TerrainSprite::LongTop:
+        return rects.longTop;
     case TerrainSprite::TopRight:
-        return {226, 98, 118, 248};
+        return rects.rightEdge;
     case TerrainSprite::Inner:
-        return {1030, 426, 270, 215};
+        return rects.inner1;
     case TerrainSprite::InnerAlt:
-        return {615, 438, 225, 220};
+        return rects.inner2;
     case TerrainSprite::InnerDecor:
-        return theme == 3 ? sf::IntRect(1060, 385, 260, 270) : sf::IntRect(115, 475, 270, 180);
+        return rects.decorativeTop;
     case TerrainSprite::Side:
-        return {72, 405, 178, 300};
+        return rects.leftEdge;
     case TerrainSprite::Crack:
-        return {1050, 432, 230, 196};
+        return rects.cracked;
     case TerrainSprite::Floating:
-        if (theme == 2)
-            return {510, 845, 405, 130};
-        if (theme == 3)
-            return {590, 760, 760, 255};
-        return {1004, 802, 345, 214};
+        return rects.floatingIsland;
     case TerrainSprite::Question:
-        if (theme == 0)
-            return {585, 750, 285, 280};
-        if (theme == 1)
-            return {600, 760, 300, 285};
-        if (theme == 2)
-            return {1100, 500, 270, 270};
-        if (theme == 3)
-            return {92, 735, 330, 300};
-        return {1100, 455, 265, 280};
+        return rects.question;
     case TerrainSprite::Top:
     default:
-        return {142, 98, 148, 248};
+        return rects.top;
     }
 }
 
@@ -315,16 +400,40 @@ bool isOpenForTerrain(char tile)
 
 TerrainSprite chooseInnerTerrainVariant(int row, int col)
 {
-    const int selector = std::abs(col * 37 + row * 17) % 11;
+    const int selector = std::abs(col * 37 + row * 17) % 9;
     if (selector == 0)
         return TerrainSprite::Crack;
     if (selector <= 2)
         return TerrainSprite::InnerAlt;
-    if (selector == 3)
-        return TerrainSprite::InnerDecor;
-    if (selector == 4)
-        return TerrainSprite::Side;
     return TerrainSprite::Inner;
+}
+
+TerrainSprite chooseGroundTileVariant(char tile, int row, int col, char above, char below, char left, char right)
+{
+    if (tile == 'B')
+        return TerrainSprite::Crack;
+
+    const bool topSurface = isOpenForTerrain(above);
+    const bool openBelow = isOpenForTerrain(below);
+    const bool leftOpen = isOpenForTerrain(left);
+    const bool rightOpen = isOpenForTerrain(right);
+    const bool hasLeftTerrain = isThemeTerrainTile(left);
+    const bool hasRightTerrain = isThemeTerrainTile(right);
+    const bool longSurface = topSurface && hasLeftTerrain && hasRightTerrain && !leftOpen && !rightOpen;
+
+    if (topSurface && openBelow)
+        return TerrainSprite::Floating;
+    if (topSurface && leftOpen)
+        return TerrainSprite::TopLeft;
+    if (topSurface && rightOpen)
+        return TerrainSprite::TopRight;
+    if (longSurface)
+        return (std::abs(col + row) % 7 == 0) ? TerrainSprite::InnerDecor : TerrainSprite::LongTop;
+    if (topSurface)
+        return (std::abs(col * 5 + row) % 13 == 0) ? TerrainSprite::InnerDecor : TerrainSprite::Top;
+    if (leftOpen || rightOpen)
+        return TerrainSprite::Side;
+    return chooseInnerTerrainVariant(row, col);
 }
 
 bool drawLevelPipe(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& bounds)
@@ -1433,10 +1542,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(link);
         }
     } else if (tile == 'G') {
-        const bool top = isOpenForTerrain(tileAt(row - 1, col));
-        const bool leftOpen = isOpenForTerrain(tileAt(row, col - 1));
-        const bool rightOpen = isOpenForTerrain(tileAt(row, col + 1));
-        const TerrainSprite sprite = top && leftOpen ? TerrainSprite::TopLeft : top && rightOpen ? TerrainSprite::TopRight : top ? TerrainSprite::Top : TerrainSprite::Inner;
+        const TerrainSprite sprite = chooseGroundTileVariant(tile, row, col, tileAt(row - 1, col), tileAt(row + 1, col), tileAt(row, col - 1), tileAt(row, col + 1));
         if (drawLevelTerrainTile(window, assets, m_number, rect, sprite))
             return;
         drawRect(window, rect, sf::Color(194, 107, 48), sf::Color(93, 54, 38));
@@ -1445,9 +1551,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         drawRect(window, {rect.left + 15.0f, rect.top + 4.0f, 2.0f, rect.height - 6.0f}, sf::Color(128, 70, 42));
         drawRect(window, {rect.left + 4.0f, rect.top + 15.0f, rect.width - 8.0f, 2.0f}, sf::Color(128, 70, 42));
     } else if (tile == 'D') {
-        const bool leftOpen = isOpenForTerrain(tileAt(row, col - 1));
-        const bool rightOpen = isOpenForTerrain(tileAt(row, col + 1));
-        const TerrainSprite sprite = leftOpen ? TerrainSprite::Side : rightOpen ? TerrainSprite::Side : chooseInnerTerrainVariant(row, col);
+        const TerrainSprite sprite = chooseGroundTileVariant(tile, row, col, tileAt(row - 1, col), tileAt(row + 1, col), tileAt(row, col - 1), tileAt(row, col + 1));
         if (drawLevelTerrainTile(window, assets, m_number, rect, sprite))
             return;
         drawRect(window, rect, sf::Color(156, 84, 43), sf::Color(87, 48, 35));
@@ -1463,7 +1567,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         drawRect(window, {rect.left + 5.0f, rect.top + 11.0f, 2.0f, 10.0f}, sf::Color(92, 45, 34));
         drawRect(window, {rect.left + 24.0f, rect.top + 22.0f, 2.0f, 10.0f}, sf::Color(92, 45, 34));
     } else if (tile == '?' || tile == 'U') {
-        if (drawLevelTerrainTile(window, assets, m_number, rect, tile == '?' ? TerrainSprite::Question : TerrainSprite::InnerDecor))
+        if (drawLevelTerrainTile(window, assets, m_number, rect, tile == '?' ? TerrainSprite::Question : TerrainSprite::InnerAlt))
             return;
         drawRect(window, rect, tile == '?' ? sf::Color(244, 176, 45) : sf::Color(126, 112, 86), sf::Color(92, 63, 40));
         drawRect(window, {rect.left + 3.0f, rect.top + 3.0f, rect.width - 6.0f, rect.height - 6.0f}, tile == '?' ? sf::Color(255, 200, 65) : sf::Color(146, 132, 100));
