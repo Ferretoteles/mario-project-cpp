@@ -174,6 +174,44 @@ bool drawFinalCastleLevelBackground(sf::RenderWindow& window, const AssetManager
     return true;
 }
 
+const char* levelBackgroundId(int levelNumber)
+{
+    static constexpr std::array<const char*, 5> backgrounds{
+        "level_grass_background",
+        "level_desert_background",
+        "level_ice_background",
+        "level_castle_background",
+        "level_lava_background",
+    };
+
+    if (levelNumber <= 0)
+        return backgrounds.front();
+    return backgrounds[static_cast<std::size_t>((levelNumber - 1) % static_cast<int>(backgrounds.size()))];
+}
+
+bool drawLevelBackground(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, float leftWorld, sf::Vector2f center, sf::Vector2f size)
+{
+    const sf::Texture* texture = assets.texture(levelBackgroundId(levelNumber));
+    if (!texture || texture->getSize().x == 0 || texture->getSize().y == 0)
+        return false;
+
+    const sf::Vector2u texSize = texture->getSize();
+    const float scale = std::max(size.x / static_cast<float>(texSize.x), size.y / static_cast<float>(texSize.y));
+    const float dstW = static_cast<float>(texSize.x) * scale;
+    const float dstH = static_cast<float>(texSize.y) * scale;
+    const float overflowX = std::max(0.0f, dstW - size.x);
+    const float overflowY = std::max(0.0f, dstH - size.y);
+    const float viewTop = center.y - size.y * 0.5f;
+    const float parallaxX = std::clamp(-leftWorld * 0.04f, -overflowX * 0.5f, overflowX * 0.5f);
+    const float parallaxY = std::clamp(-(center.y - size.y * 0.5f) * 0.02f, -overflowY * 0.5f, overflowY * 0.5f);
+
+    sf::Sprite background(*texture);
+    background.setScale(scale, scale);
+    background.setPosition(leftWorld - overflowX * 0.5f + parallaxX, viewTop - overflowY * 0.5f + parallaxY);
+    window.draw(background);
+    return true;
+}
+
 bool drawCastleEntranceFacade(sf::RenderWindow& window, const AssetManager& assets, float groundY, float visibility)
 {
     if (visibility <= 0.0f)
@@ -766,7 +804,8 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
     const float rightWorld = center.x + size.x * 0.5f;
     const float groundY = GroundRow * Tile;
     const bool dungeonInterior = m_number == 5 && castleInterior;
-    const bool finalBackdrop = m_number == 5 && !dungeonInterior && drawFinalCastleLevelBackground(window, assets, leftWorld, center, size);
+    const bool levelBackdrop = !dungeonInterior && drawLevelBackground(window, assets, m_number, leftWorld, center, size);
+    const bool finalBackdrop = !levelBackdrop && m_number == 5 && !dungeonInterior && drawFinalCastleLevelBackground(window, assets, leftWorld, center, size);
 
     if (dungeonInterior)
         drawCastleInteriorBackdrop(window, assets);
@@ -786,7 +825,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         window.draw(backdrop);
     }
 
-    if (!finalBackdrop && !dungeonInterior && !inSecret) {
+    if (!levelBackdrop && !finalBackdrop && !dungeonInterior && !inSecret) {
         sf::VertexArray sky(sf::Quads, 4);
         sky[0].position = {leftWorld, center.y - size.y * 0.5f};
         sky[1].position = {rightWorld, center.y - size.y * 0.5f};
@@ -821,7 +860,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         drawCastleEntranceFacade(window, assets, groundY, castleVisibility);
     }
 
-    if (!finalBackdrop && !dungeonInterior && !inSecret) {
+    if (!levelBackdrop && !finalBackdrop && !dungeonInterior && !inSecret) {
         const float bushOffset = -std::fmod(leftWorld * 0.18f, 220.0f);
         for (int i = -1; i < 10; ++i) {
             const float x = leftWorld + bushOffset + i * 220.0f;

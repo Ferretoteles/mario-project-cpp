@@ -38,6 +38,11 @@ void AssetManager::load()
     loadTexture("background_mountains", "spritesheets/background_mountains.png");
     loadTexture("background_trees", "spritesheets/background_trees.png");
     loadTexture("background_clouds", "spritesheets/background_clouds.png");
+    loadTexture("level_grass_background", "levels/grass/background.png");
+    loadTexture("level_desert_background", "levels/desert/background.png");
+    loadTexture("level_ice_background", "levels/ice/background.png");
+    loadTexture("level_castle_background", "levels/castle/background.png");
+    loadTexture("level_lava_background", "levels/lava/background.png");
     loadTexture("menu_back", "menu/back.png");
     loadTextureWithColorKey("menu_clouds", "menu/clouds_sheet.png", 18);
     loadTextureWithColorKey("menu_coin", "menu/coin.png", 18);
