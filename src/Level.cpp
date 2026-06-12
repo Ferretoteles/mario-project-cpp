@@ -228,7 +228,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {97, 379, 368, 297},   // grass leftEdge - lewy narożnik/platforma L
             {573, 399, 314, 276},  // grass rightEdge - prawy gorny narożnik
             {98, 719, 368, 300},   // grass decorativeTop - trawa z kwiatkami
-            {972, 772, 388, 242},  // grass floating - latajaca wyspa
+            {974, 780, 384, 232},  // grass floating - latajaca wyspa
             {556, 732, 316, 288},  // grass question - zolty blok pytania
         },
         {
@@ -240,7 +240,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {72, 438, 434, 283},   // desert leftEdge - lewy narożnik/platforma L
             {602, 450, 225, 241},  // desert rightEdge - pojedynczy blok
             {74, 766, 426, 264},   // desert decorativeTop - ozdobny piaskowy blok
-            {968, 742, 397, 283},  // desert floating - latajaca wyspa pustynna
+            {970, 744, 394, 278},  // desert floating - latajaca wyspa pustynna
             {561, 735, 354, 326},  // desert question - specjalny blok z symbolem
         },
         {
@@ -252,7 +252,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {86, 478, 217, 297},   // ice leftEdge - lewa krawedz z czapa
             {1088, 107, 302, 294}, // ice rightEdge - prawy narożnik z czapa
             {732, 482, 298, 294},  // ice decorativeTop - krysztaly
-            {502, 839, 418, 166},  // ice floating - podwieszona lodowa platforma
+            {503, 840, 416, 164},  // ice floating - podwieszona lodowa platforma
             {1083, 486, 299, 295}, // ice question - ozdobny blok sniezynki
         },
         {
@@ -264,7 +264,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {59, 347, 414, 326},   // castle leftEdge - boczna krawedz/schodek
             {531, 347, 123, 328},  // castle rightEdge - pionowy blok kamienny
             {1036, 359, 326, 313}, // castle decorativeTop - brama/dekoracyjny blok
-            {575, 752, 787, 272},  // castle floating - kamienna latajaca platforma
+            {576, 754, 784, 268},  // castle floating - kamienna latajaca platforma
             {112, 713, 317, 310},  // castle question - magiczny blok/symbol
         },
         {
@@ -276,7 +276,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {49, 458, 218, 301},   // lava leftEdge - lawowy bok/schodek
             {1082, 115, 304, 270}, // lava rightEdge - prawa krawedz z lawa
             {703, 453, 322, 303},  // lava decorativeTop - ciemny dekoracyjny blok
-            {487, 816, 433, 217},  // lava floating - wyciety spod lawowej wyspy
+            {488, 818, 431, 214},  // lava floating - wyciety spod lawowej wyspy
             {1098, 459, 307, 302}, // lava question - blok z plomieniem/symbolem
         },
     }};
@@ -334,9 +334,14 @@ bool drawTextureFragment(sf::RenderWindow& window, const sf::Texture& texture, c
     src.width = std::clamp(src.width, 1, static_cast<int>(size.x) - src.left);
     src.height = std::clamp(src.height, 1, static_cast<int>(size.y) - src.top);
 
+    const sf::FloatRect pixelDst(std::round(dst.left),
+                                 std::round(dst.top),
+                                 std::round(dst.width),
+                                 std::round(dst.height));
+
     sf::Sprite sprite(texture, src);
-    sprite.setPosition(dst.left, dst.top);
-    sprite.setScale(dst.width / static_cast<float>(src.width), dst.height / static_cast<float>(src.height));
+    sprite.setPosition(pixelDst.left, pixelDst.top);
+    sprite.setScale(pixelDst.width / static_cast<float>(src.width), pixelDst.height / static_cast<float>(src.height));
     window.draw(sprite);
     return true;
 }
@@ -430,6 +435,39 @@ bool drawLevelTerrainTile(sf::RenderWindow& window, const AssetManager& assets, 
 {
     drawRect(window, rect, levelTerrainFillColor(levelNumber));
     return drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource(levelNumber, sprite));
+}
+
+bool drawSpikeBaseTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect)
+{
+    return drawLevelTerrainTile(window, assets, levelNumber, rect, TerrainSprite::Top);
+}
+
+void drawLavaTile(sf::RenderWindow& window, const sf::FloatRect& rect, bool topSurface, float time, WorldMode world)
+{
+    const sf::Color base = world == WorldMode::Ghost ? sf::Color(105, 62, 160) : sf::Color(198, 61, 54);
+    const sf::Color deep = world == WorldMode::Ghost ? sf::Color(62, 38, 104) : sf::Color(116, 24, 28);
+    drawRect(window, rect, topSurface ? base : deep);
+
+    if (topSurface) {
+        drawRect(window, {rect.left, rect.top, rect.width, 5.0f}, sf::Color(255, 196, 64));
+        for (int i = 0; i < 4; ++i) {
+            drawCircle(window,
+                       {rect.left + rect.width * (0.16f + i * 0.23f), rect.top + rect.height * 0.48f + std::sin(time * 5.0f + i) * 2.0f},
+                       rect.width * 0.08f,
+                       sf::Color(255, 192, 73));
+        }
+    } else {
+        drawRect(window, {rect.left, rect.top, rect.width, 2.0f}, sf::Color(255, 108, 45, 150));
+        drawCircle(window, {rect.left + rect.width * 0.28f, rect.top + rect.height * 0.35f}, rect.width * 0.06f, sf::Color(235, 82, 42, 170));
+        drawCircle(window, {rect.left + rect.width * 0.72f, rect.top + rect.height * 0.68f}, rect.width * 0.05f, sf::Color(255, 143, 53, 150));
+    }
+}
+
+void drawLavaColumn(sf::RenderWindow& window, const sf::FloatRect& hazardRect, float time, WorldMode world)
+{
+    drawLavaTile(window, {hazardRect.left, hazardRect.top - Tile, hazardRect.width, hazardRect.height}, true, time, world);
+    drawLavaTile(window, hazardRect, false, time, world);
+    drawLavaTile(window, {hazardRect.left, hazardRect.top + Tile, hazardRect.width, hazardRect.height}, false, time, world);
 }
 
 bool isThemeTerrainTile(char tile)
@@ -1121,7 +1159,10 @@ void Level::update(float dt)
 
 void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode world, bool secretsRevealed, float time, bool castleInterior) const
 {
-    const sf::View view = window.getView();
+    const sf::View originalView = window.getView();
+    sf::View view = originalView;
+    view.setCenter(std::round(view.getCenter().x), std::round(view.getCenter().y));
+    window.setView(view);
     const sf::Vector2f center = view.getCenter();
     const sf::Vector2f size = view.getSize();
     const float leftWorld = center.x - size.x * 0.5f;
@@ -1212,7 +1253,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
     for (int row = 0; row < Rows; ++row) {
         for (int col = firstCol; col <= lastCol; ++col) {
             const char tile = tileAt(row, col);
-            if (tile != '.' && tile != 'P' && tile != 'p')
+            if (tile != '.' && tile != 'P' && tile != 'p' && tile != '~')
                 drawTile(window, assets, tile, tileRect(row, col), world, secretsRevealed, time);
         }
     }
@@ -1277,6 +1318,13 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         }
     }
 
+    for (int row = 0; row < Rows; ++row) {
+        for (int col = firstCol; col <= lastCol; ++col) {
+            if (tileAt(row, col) == '~')
+                drawLavaColumn(window, tileRect(row, col), time, world);
+        }
+    }
+
     for (const auto& platform : m_platforms) {
         if (!platform.visible)
             continue;
@@ -1293,6 +1341,8 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         drawRect(window, {r.left, rectBottom(r) - 3.0f, r.width, 3.0f}, sf::Color(82, 45, 34)); // ciemny spod
         drawRect(window, {r.left, r.top + r.height * 0.5f - 1.0f, r.width, 2.0f}, sf::Color(112, 55, 38)); // sloj na srodku, pelna szerokosc
     }
+
+    window.setView(originalView);
 }
 
 char Level::tileAt(int row, int col) const
@@ -1468,6 +1518,10 @@ void Level::placePipe(int col, int width, int height, sf::Vector2f target, bool 
 
 void Level::placeStairs(int startCol, int steps, int direction)
 {
+    if (steps <= 0 || direction == 0)
+        return;
+    direction = direction < 0 ? -1 : 1;
+
     for (int step = 0; step < steps; ++step) {
         const int col = startCol + step * direction;
         const int height = step + 1;
@@ -1640,6 +1694,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         if (tile == 'P')
             drawRect(window, {rect.left - 5.0f, rect.top - 6.0f, rect.width + 10.0f, 18.0f}, sf::Color(60, 207, 74), sf::Color(12, 86, 32));
     } else if (tile == '^') {
+        drawSpikeBaseTile(window, assets, m_number, rect);
         drawRect(window, {rect.left + 1.0f, rect.top + rect.height - 6.0f, rect.width - 2.0f, 5.0f}, sf::Color(54, 47, 54));
         drawRect(window, {rect.left + 3.0f, rect.top + rect.height - 8.0f, rect.width - 6.0f, 3.0f}, sf::Color(114, 104, 112));
         for (int i = 0; i < 3; ++i) {
@@ -1660,9 +1715,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(highlight);
         }
     } else if (tile == '~') {
-        drawRect(window, rect, world == WorldMode::Ghost ? sf::Color(105, 62, 160) : sf::Color(198, 61, 54));
-        for (int i = 0; i < 4; ++i)
-            drawCircle(window, {rect.left + rect.width * (0.16f + i * 0.23f), rect.top + rect.height * 0.48f + std::sin(time * 5.0f + i) * 2.0f}, rect.width * 0.08f, sf::Color(255, 192, 73));
+        drawLavaColumn(window, rect, time, world);
     } else if (tile == 'T') {
         drawRect(window, rect, sf::Color(54, 178, 226), sf::Color(22, 80, 110));
         drawRect(window, {rect.left + 4.0f, rect.top + rect.height * 0.25f, rect.width - 8.0f, rect.height * 0.18f}, sf::Color(255, 230, 88));
