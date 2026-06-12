@@ -155,6 +155,78 @@ bool drawDungeonArenaAsset(sf::RenderWindow& window, const AssetManager& assets,
     return true;
 }
 
+struct LevelVisualAssets {
+    const char* background;
+    const char* tiles;
+    const char* pipes;
+};
+
+const LevelVisualAssets& levelVisualAssets(int levelNumber)
+{
+    static constexpr std::array<LevelVisualAssets, 5> assets{{
+        {"level_grass_background", "level_grass_tiles", "level_grass_pipes"},
+        {"level_desert_background", "level_desert_tiles", "level_desert_pipes"},
+        {"level_ice_background", "level_ice_tiles", "level_ice_pipes"},
+        {"level_castle_background", "level_castle_tiles", "level_castle_pipes"},
+        {"level_lava_background", "level_lava_tiles", "level_lava_pipes"},
+    }};
+
+    if (levelNumber <= 0)
+        return assets.front();
+    return assets[static_cast<std::size_t>((levelNumber - 1) % static_cast<int>(assets.size()))];
+}
+
+bool drawTextureFragment(sf::RenderWindow& window, const sf::Texture& texture, const sf::FloatRect& dst, sf::IntRect src)
+{
+    const sf::Vector2u size = texture.getSize();
+    if (size.x == 0 || size.y == 0)
+        return false;
+
+    src.left = std::clamp(src.left, 0, static_cast<int>(size.x) - 1);
+    src.top = std::clamp(src.top, 0, static_cast<int>(size.y) - 1);
+    src.width = std::clamp(src.width, 1, static_cast<int>(size.x) - src.left);
+    src.height = std::clamp(src.height, 1, static_cast<int>(size.y) - src.top);
+
+    sf::Sprite sprite(texture, src);
+    sprite.setPosition(dst.left, dst.top);
+    sprite.setScale(dst.width / static_cast<float>(src.width), dst.height / static_cast<float>(src.height));
+    window.draw(sprite);
+    return true;
+}
+
+bool drawLevelTileFragment(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& dst, sf::IntRect src)
+{
+    const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).tiles);
+    return texture && drawTextureFragment(window, *texture, dst, src);
+}
+
+bool drawLevelPipeFragment(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& dst, sf::IntRect src)
+{
+    const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).pipes);
+    return texture && drawTextureFragment(window, *texture, dst, src);
+}
+
+sf::IntRect levelTerrainSource(char tile)
+{
+    if (tile == 'G')
+        return {500, 165, 150, 150};
+    if (tile == 'B')
+        return {500, 515, 150, 150};
+    return {505, 610, 150, 150};
+}
+
+sf::IntRect levelPipeSource(char tile)
+{
+    if (tile == 'P')
+        return {90, 250, 260, 150};
+    return {125, 330, 175, 210};
+}
+
+sf::IntRect levelPlatformSource()
+{
+    return {520, 855, 360, 90};
+}
+
 bool drawFinalCastleLevelBackground(sf::RenderWindow& window, const AssetManager& assets, float leftWorld, sf::Vector2f center, sf::Vector2f size)
 {
     const sf::Texture* texture = assets.texture("final_castle_background");
@@ -174,24 +246,9 @@ bool drawFinalCastleLevelBackground(sf::RenderWindow& window, const AssetManager
     return true;
 }
 
-const char* levelBackgroundId(int levelNumber)
-{
-    static constexpr std::array<const char*, 5> backgrounds{
-        "level_grass_background",
-        "level_desert_background",
-        "level_ice_background",
-        "level_castle_background",
-        "level_lava_background",
-    };
-
-    if (levelNumber <= 0)
-        return backgrounds.front();
-    return backgrounds[static_cast<std::size_t>((levelNumber - 1) % static_cast<int>(backgrounds.size()))];
-}
-
 bool drawLevelBackground(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, float leftWorld, sf::Vector2f center, sf::Vector2f size)
 {
-    const sf::Texture* texture = assets.texture(levelBackgroundId(levelNumber));
+    const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).background);
     if (!texture || texture->getSize().x == 0 || texture->getSize().y == 0)
         return false;
 
@@ -893,12 +950,34 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         }
     }
 
+    const float viewBottom = center.y + size.y * 0.5f;
+    const int visualLastRow = static_cast<int>(std::ceil(viewBottom / Tile));
+    for (int col = firstCol; col <= lastCol; ++col) {
+        int fillStartRow = -1;
+        for (int row = Rows - 1; row >= GroundRow; --row) {
+            const char tile = tileAt(row, col);
+            if (tile == '~')
+                break;
+            if (tile == 'G' || tile == 'D') {
+                fillStartRow = row + 1;
+                break;
+            }
+        }
+
+        if (fillStartRow >= 0) {
+            for (int row = fillStartRow; row <= visualLastRow; ++row)
+                drawTile(window, assets, 'D', {col * Tile, row * Tile, Tile, Tile}, world, secretsRevealed, time);
+        }
+    }
+
     for (const auto& platform : m_platforms) {
         if (!platform.visible)
             continue;
         // Rysujemy dokladnie na hitboxie - bez wychodzacego na zewnatrz obrysu,
         // ktory wczesniej przesuwal wizualnie deske o 2 px ponad powierzchnie kolizji.
         const sf::FloatRect r = platform.rect;
+        if (drawLevelTileFragment(window, assets, m_number, r, levelPlatformSource()))
+            continue;
         const sf::Color body = platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49);
         drawRect(window, r, body);
         drawRect(window, {r.left, r.top, r.width, 3.0f}, sf::Color(232, 170, 110));            // jasna gorna krawedz
@@ -1201,16 +1280,22 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(link);
         }
     } else if (tile == 'G') {
+        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+            return;
         drawRect(window, rect, sf::Color(194, 107, 48), sf::Color(93, 54, 38));
         drawRect(window, {rect.left + 3.0f, rect.top + 3.0f, rect.width - 6.0f, rect.height - 6.0f}, sf::Color(216, 132, 58));
         drawRect(window, {rect.left, rect.top, rect.width, 4.0f}, sf::Color(246, 177, 70));
         drawRect(window, {rect.left + 15.0f, rect.top + 4.0f, 2.0f, rect.height - 6.0f}, sf::Color(128, 70, 42));
         drawRect(window, {rect.left + 4.0f, rect.top + 15.0f, rect.width - 8.0f, 2.0f}, sf::Color(128, 70, 42));
     } else if (tile == 'D') {
+        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+            return;
         drawRect(window, rect, sf::Color(156, 84, 43), sf::Color(87, 48, 35));
         drawRect(window, {rect.left + 6.0f, rect.top + 6.0f, 7.0f, 7.0f}, sf::Color(190, 105, 50));
         drawRect(window, {rect.left + 21.0f, rect.top + 18.0f, 6.0f, 6.0f}, sf::Color(111, 62, 39));
     } else if (tile == 'B') {
+        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+            return;
         drawRect(window, rect, sf::Color(190, 86, 45), sf::Color(83, 42, 33));
         drawRect(window, {rect.left, rect.top + 10.0f, rect.width, 2.0f}, sf::Color(92, 45, 34));
         drawRect(window, {rect.left, rect.top + 21.0f, rect.width, 2.0f}, sf::Color(92, 45, 34));
@@ -1232,6 +1317,8 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(mark);
         }
     } else if (tile == 'P' || tile == 'p') {
+        if (drawLevelPipeFragment(window, assets, m_number, rect, levelPipeSource(tile)))
+            return;
         drawRect(window, rect, sf::Color(36, 174, 58), sf::Color(12, 86, 32));
         drawRect(window, {rect.left + 7.0f, rect.top + 4.0f, 5.0f, rect.height - 8.0f}, sf::Color(155, 255, 137));
         drawRect(window, {rect.left + rect.width - 9.0f, rect.top + 3.0f, 3.0f, rect.height - 6.0f}, sf::Color(18, 115, 38));
