@@ -220,13 +220,13 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
 {
     static const std::array<ThemeTileRects, 5> rects{{
         {
-            {98, 57, 271, 290},    // grass top - ciasny pojedynczy blok trawy
-            {430, 57, 922, 291},   // grass longTop - dluga platforma z trawa
+            {98, 88, 271, 259},    // grass top - bez lisci i przezroczystego pasa nad trawa
+            {430, 90, 922, 258},   // grass longTop - bez artefaktow ponad trawa
             {573, 399, 314, 276},  // grass inner1 - blok bez bialych marginesow
             {573, 399, 314, 276},  // grass inner2 - blok bez bialych marginesow
             {1005, 422, 332, 253}, // grass cracked - pekniety brazowy dirt
             {97, 379, 368, 297},   // grass leftEdge - lewy narożnik/platforma L
-            {573, 399, 314, 276},  // grass rightEdge - prawy gorny narożnik
+            {98, 88, 271, 259},    // grass rightEdge - lustrzany stopien bez brazowych artefaktow
             {98, 719, 368, 300},   // grass decorativeTop - trawa z kwiatkami
             {974, 780, 384, 232},  // grass floating - latajaca wyspa
             {556, 732, 316, 288},  // grass question - zolty blok pytania
@@ -252,7 +252,7 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
             {86, 478, 217, 297},   // ice leftEdge - lewa krawedz z czapa
             {1088, 107, 302, 294}, // ice rightEdge - prawy narożnik z czapa
             {732, 482, 298, 294},  // ice decorativeTop - krysztaly
-            {503, 840, 416, 164},  // ice floating - podwieszona lodowa platforma
+            {502, 839, 418, 166},  // ice floating - gotowa wyspa lodowa z pelnym spodem
             {1083, 486, 299, 295}, // ice question - ozdobny blok sniezynki
         },
         {
@@ -433,8 +433,11 @@ sf::IntRect levelPlatformSource(int levelNumber)
 
 bool drawLevelTerrainTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect, TerrainSprite sprite)
 {
+    if (drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource(levelNumber, sprite)))
+        return true;
+
     drawRect(window, rect, levelTerrainFillColor(levelNumber));
-    return drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource(levelNumber, sprite));
+    return false;
 }
 
 bool drawSpikeBaseTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect)
@@ -444,22 +447,26 @@ bool drawSpikeBaseTile(sf::RenderWindow& window, const AssetManager& assets, int
 
 void drawLavaTile(sf::RenderWindow& window, const sf::FloatRect& rect, bool topSurface, float time, WorldMode world)
 {
-    const sf::Color base = world == WorldMode::Ghost ? sf::Color(105, 62, 160) : sf::Color(198, 61, 54);
-    const sf::Color deep = world == WorldMode::Ghost ? sf::Color(62, 38, 104) : sf::Color(116, 24, 28);
-    drawRect(window, rect, topSurface ? base : deep);
+    const sf::Color surface = world == WorldMode::Ghost ? sf::Color(140, 86, 190) : sf::Color(244, 76, 34);
+    const sf::Color middle = world == WorldMode::Ghost ? sf::Color(92, 52, 145) : sf::Color(174, 36, 32);
+    const sf::Color deep = world == WorldMode::Ghost ? sf::Color(48, 30, 92) : sf::Color(78, 16, 24);
+    drawRect(window, rect, topSurface ? surface : deep);
 
     if (topSurface) {
-        drawRect(window, {rect.left, rect.top, rect.width, 5.0f}, sf::Color(255, 196, 64));
+        drawRect(window, {rect.left, rect.top + 2.0f, rect.width, 8.0f}, sf::Color(255, 190, 55));
+        drawRect(window, {rect.left, rect.top + 10.0f, rect.width, 5.0f}, sf::Color(255, 112, 34));
         for (int i = 0; i < 4; ++i) {
             drawCircle(window,
-                       {rect.left + rect.width * (0.16f + i * 0.23f), rect.top + rect.height * 0.48f + std::sin(time * 5.0f + i) * 2.0f},
+                       {rect.left + rect.width * (0.16f + i * 0.23f), rect.top + rect.height * 0.42f + std::sin(time * 5.0f + i) * 1.5f},
                        rect.width * 0.08f,
-                       sf::Color(255, 192, 73));
+                       sf::Color(255, 222, 94));
         }
     } else {
-        drawRect(window, {rect.left, rect.top, rect.width, 2.0f}, sf::Color(255, 108, 45, 150));
-        drawCircle(window, {rect.left + rect.width * 0.28f, rect.top + rect.height * 0.35f}, rect.width * 0.06f, sf::Color(235, 82, 42, 170));
-        drawCircle(window, {rect.left + rect.width * 0.72f, rect.top + rect.height * 0.68f}, rect.width * 0.05f, sf::Color(255, 143, 53, 150));
+        drawRect(window, {rect.left, rect.top, rect.width, rect.height * 0.46f}, middle);
+        drawRect(window, {rect.left, rect.top + rect.height * 0.46f, rect.width, rect.height * 0.54f}, deep);
+        drawRect(window, {rect.left, rect.top, rect.width, 2.0f}, sf::Color(255, 108, 45, 170));
+        drawCircle(window, {rect.left + rect.width * 0.30f, rect.top + rect.height * 0.35f}, rect.width * 0.055f, sf::Color(235, 82, 42, 180));
+        drawCircle(window, {rect.left + rect.width * 0.72f, rect.top + rect.height * 0.68f}, rect.width * 0.045f, sf::Color(255, 143, 53, 160));
     }
 }
 
@@ -1332,9 +1339,9 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         // ktory wczesniej przesuwal wizualnie deske o 2 px ponad powierzchnie kolizji.
         const sf::FloatRect r = platform.rect;
         const sf::FloatRect visual(r.left - 4.0f, r.top - 6.0f, r.width + 8.0f, std::max(30.0f, r.height + 28.0f));
-        drawRect(window, visual, levelTerrainFillColor(m_number));
         if (drawLevelTileFragment(window, assets, m_number, visual, levelPlatformSource(m_number)))
             continue;
+        drawRect(window, visual, levelTerrainFillColor(m_number));
         const sf::Color body = platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49);
         drawRect(window, r, body);
         drawRect(window, {r.left, r.top, r.width, 3.0f}, sf::Color(232, 170, 110));            // jasna gorna krawedz
@@ -1695,22 +1702,21 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             drawRect(window, {rect.left - 5.0f, rect.top - 6.0f, rect.width + 10.0f, 18.0f}, sf::Color(60, 207, 74), sf::Color(12, 86, 32));
     } else if (tile == '^') {
         drawSpikeBaseTile(window, assets, m_number, rect);
-        drawRect(window, {rect.left + 1.0f, rect.top + rect.height - 6.0f, rect.width - 2.0f, 5.0f}, sf::Color(54, 47, 54));
-        drawRect(window, {rect.left + 3.0f, rect.top + rect.height - 8.0f, rect.width - 6.0f, 3.0f}, sf::Color(114, 104, 112));
         for (int i = 0; i < 3; ++i) {
             const float step = rect.width / 3.0f;
+            const float baseY = rect.top + rect.height * 0.52f;
             sf::ConvexShape spike(3);
-            spike.setPoint(0, {rect.left + i * step + 2.0f, rectBottom(rect) - 7.0f});
+            spike.setPoint(0, {rect.left + i * step + 2.0f, baseY});
             spike.setPoint(1, {rect.left + i * step + step * 0.5f, rect.top + 2.0f});
-            spike.setPoint(2, {rect.left + (i + 1) * step - 2.0f, rectBottom(rect) - 7.0f});
+            spike.setPoint(2, {rect.left + (i + 1) * step - 2.0f, baseY});
             spike.setFillColor(sf::Color(236, 238, 232));
             spike.setOutlineColor(sf::Color(46, 42, 48));
             spike.setOutlineThickness(1.0f);
             window.draw(spike);
             sf::ConvexShape highlight(3);
-            highlight.setPoint(0, {rect.left + i * step + step * 0.42f, rect.top + 8.0f});
+            highlight.setPoint(0, {rect.left + i * step + step * 0.42f, rect.top + 7.0f});
             highlight.setPoint(1, {rect.left + i * step + step * 0.50f, rect.top + 3.5f});
-            highlight.setPoint(2, {rect.left + i * step + step * 0.50f, rectBottom(rect) - 11.0f});
+            highlight.setPoint(2, {rect.left + i * step + step * 0.50f, baseY - 3.0f});
             highlight.setFillColor(sf::Color(255, 255, 255, 170));
             window.draw(highlight);
         }
