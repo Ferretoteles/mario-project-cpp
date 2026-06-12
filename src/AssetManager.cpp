@@ -48,6 +48,11 @@ void AssetManager::load()
     loadTextureWithColorKey("level_ice_tiles", "levels/ice/tiles_sheet.png", 18);
     loadTextureWithColorKey("level_castle_tiles", "levels/castle/tiles_sheet.png", 18);
     loadTextureWithColorKey("level_lava_tiles", "levels/lava/tiles_sheet.png", 18);
+    loadTexture("level_grass_inner", "levels/grass/inner_block.png");
+    loadTexture("level_desert_inner", "levels/desert/inner_block.png");
+    loadTexture("level_ice_inner", "levels/ice/inner_block.png");
+    loadTexture("level_castle_inner", "levels/castle/inner_block.png");
+    loadTexture("level_lava_inner", "levels/lava/inner_block.png");
     loadTextureWithColorKey("level_grass_pipes", "levels/grass/pipes_sheet.png", 18);
     loadTextureWithColorKey("level_desert_pipes", "levels/desert/pipes_sheet.png", 18);
     loadTextureWithColorKey("level_ice_pipes", "levels/ice/pipes_sheet.png", 18);

@@ -158,6 +158,7 @@ bool drawDungeonArenaAsset(sf::RenderWindow& window, const AssetManager& assets,
 struct LevelVisualAssets {
     const char* background;
     const char* tiles;
+    const char* inner;
     const char* pipes;
 };
 
@@ -277,11 +278,11 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
 const LevelVisualAssets& levelVisualAssets(int levelNumber)
 {
     static constexpr std::array<LevelVisualAssets, 5> assets{{
-        {"level_grass_background", "level_grass_tiles", "level_grass_pipes"},
-        {"level_desert_background", "level_desert_tiles", "level_desert_pipes"},
-        {"level_ice_background", "level_ice_tiles", "level_ice_pipes"},
-        {"level_castle_background", "level_castle_tiles", "level_castle_pipes"},
-        {"level_lava_background", "level_lava_tiles", "level_lava_pipes"},
+        {"level_grass_background", "level_grass_tiles", "level_grass_inner", "level_grass_pipes"},
+        {"level_desert_background", "level_desert_tiles", "level_desert_inner", "level_desert_pipes"},
+        {"level_ice_background", "level_ice_tiles", "level_ice_inner", "level_ice_pipes"},
+        {"level_castle_background", "level_castle_tiles", "level_castle_inner", "level_castle_pipes"},
+        {"level_lava_background", "level_lava_tiles", "level_lava_inner", "level_lava_pipes"},
     }};
 
     return assets[static_cast<std::size_t>(levelThemeIndex(levelNumber))];
@@ -309,6 +310,16 @@ bool drawLevelTileFragment(sf::RenderWindow& window, const AssetManager& assets,
 {
     const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).tiles);
     return texture && drawTextureFragment(window, *texture, dst, src);
+}
+
+bool drawLevelInnerBlock(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& dst)
+{
+    const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).inner);
+    if (!texture)
+        return false;
+
+    const sf::Vector2u size = texture->getSize();
+    return size.x > 0 && size.y > 0 && drawTextureFragment(window, *texture, dst, {0, 0, static_cast<int>(size.x), static_cast<int>(size.y)});
 }
 
 bool drawLevelPipeFragment(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& dst, sf::IntRect src)
@@ -1225,8 +1236,11 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         }
 
         if (fillStartRow >= 0) {
-            for (int row = fillStartRow; row <= visualLastRow; ++row)
-                drawLevelTerrainTile(window, assets, m_number, {col * Tile, row * Tile, Tile, Tile}, chooseInnerTerrainVariant(row, col));
+            for (int row = fillStartRow; row <= visualLastRow; ++row) {
+                const sf::FloatRect rect(col * Tile, row * Tile, Tile, Tile);
+                if (!drawLevelInnerBlock(window, assets, m_number, rect))
+                    drawLevelTerrainTile(window, assets, m_number, rect, chooseInnerTerrainVariant(row, col));
+            }
         }
     }
 
@@ -1542,6 +1556,8 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(link);
         }
     } else if (tile == 'G') {
+        if (isSolidTile(tileAt(row - 1, col), world, secretsRevealed) && drawLevelInnerBlock(window, assets, m_number, rect))
+            return;
         const TerrainSprite sprite = chooseGroundTileVariant(tile, row, col, tileAt(row - 1, col), tileAt(row + 1, col), tileAt(row, col - 1), tileAt(row, col + 1));
         if (drawLevelTerrainTile(window, assets, m_number, rect, sprite))
             return;
@@ -1551,6 +1567,8 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         drawRect(window, {rect.left + 15.0f, rect.top + 4.0f, 2.0f, rect.height - 6.0f}, sf::Color(128, 70, 42));
         drawRect(window, {rect.left + 4.0f, rect.top + 15.0f, rect.width - 8.0f, 2.0f}, sf::Color(128, 70, 42));
     } else if (tile == 'D') {
+        if (isSolidTile(tileAt(row - 1, col), world, secretsRevealed) && drawLevelInnerBlock(window, assets, m_number, rect))
+            return;
         const TerrainSprite sprite = chooseGroundTileVariant(tile, row, col, tileAt(row - 1, col), tileAt(row + 1, col), tileAt(row, col - 1), tileAt(row, col + 1));
         if (drawLevelTerrainTile(window, assets, m_number, rect, sprite))
             return;
