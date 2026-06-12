@@ -206,25 +206,44 @@ bool drawLevelPipeFragment(sf::RenderWindow& window, const AssetManager& assets,
     return texture && drawTextureFragment(window, *texture, dst, src);
 }
 
-sf::IntRect levelTerrainSource(char tile)
+sf::Color levelTerrainFillColor(int levelNumber)
 {
-    if (tile == 'G')
-        return {500, 165, 150, 150};
-    if (tile == 'B')
-        return {500, 515, 150, 150};
-    return {505, 610, 150, 150};
+    const int theme = levelNumber <= 0 ? 0 : (levelNumber - 1) % 5;
+    switch (theme) {
+    case 1:
+        return sf::Color(194, 162, 86);
+    case 2:
+        return sf::Color(78, 174, 220);
+    case 3:
+        return sf::Color(92, 92, 102);
+    case 4:
+        return sf::Color(64, 52, 48);
+    default:
+        return sf::Color(116, 78, 45);
+    }
+}
+
+sf::IntRect levelTerrainSource()
+{
+    return {70, 112, 240, 245};
 }
 
 sf::IntRect levelPipeSource(char tile)
 {
     if (tile == 'P')
-        return {90, 250, 260, 150};
-    return {125, 330, 175, 210};
+        return {72, 248, 290, 248};
+    return {132, 352, 170, 235};
 }
 
 sf::IntRect levelPlatformSource()
 {
-    return {520, 855, 360, 90};
+    return levelTerrainSource();
+}
+
+bool drawLevelTerrainTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect)
+{
+    drawRect(window, rect, levelTerrainFillColor(levelNumber));
+    return drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource());
 }
 
 bool drawFinalCastleLevelBackground(sf::RenderWindow& window, const AssetManager& assets, float leftWorld, sf::Vector2f center, sf::Vector2f size)
@@ -976,6 +995,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         // Rysujemy dokladnie na hitboxie - bez wychodzacego na zewnatrz obrysu,
         // ktory wczesniej przesuwal wizualnie deske o 2 px ponad powierzchnie kolizji.
         const sf::FloatRect r = platform.rect;
+        drawRect(window, r, levelTerrainFillColor(m_number));
         if (drawLevelTileFragment(window, assets, m_number, r, levelPlatformSource()))
             continue;
         const sf::Color body = platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49);
@@ -1280,7 +1300,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
             window.draw(link);
         }
     } else if (tile == 'G') {
-        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+        if (drawLevelTerrainTile(window, assets, m_number, rect))
             return;
         drawRect(window, rect, sf::Color(194, 107, 48), sf::Color(93, 54, 38));
         drawRect(window, {rect.left + 3.0f, rect.top + 3.0f, rect.width - 6.0f, rect.height - 6.0f}, sf::Color(216, 132, 58));
@@ -1288,13 +1308,13 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         drawRect(window, {rect.left + 15.0f, rect.top + 4.0f, 2.0f, rect.height - 6.0f}, sf::Color(128, 70, 42));
         drawRect(window, {rect.left + 4.0f, rect.top + 15.0f, rect.width - 8.0f, 2.0f}, sf::Color(128, 70, 42));
     } else if (tile == 'D') {
-        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+        if (drawLevelTerrainTile(window, assets, m_number, rect))
             return;
         drawRect(window, rect, sf::Color(156, 84, 43), sf::Color(87, 48, 35));
         drawRect(window, {rect.left + 6.0f, rect.top + 6.0f, 7.0f, 7.0f}, sf::Color(190, 105, 50));
         drawRect(window, {rect.left + 21.0f, rect.top + 18.0f, 6.0f, 6.0f}, sf::Color(111, 62, 39));
     } else if (tile == 'B') {
-        if (drawLevelTileFragment(window, assets, m_number, rect, levelTerrainSource(tile)))
+        if (drawLevelTerrainTile(window, assets, m_number, rect))
             return;
         drawRect(window, rect, sf::Color(190, 86, 45), sf::Color(83, 42, 33));
         drawRect(window, {rect.left, rect.top + 10.0f, rect.width, 2.0f}, sf::Color(92, 45, 34));
