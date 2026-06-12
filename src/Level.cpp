@@ -166,9 +166,18 @@ enum class TerrainSprite {
     Top,
     TopRight,
     Inner,
+    InnerAlt,
+    InnerDecor,
+    Side,
     Crack,
-    Floating
+    Floating,
+    Question
 };
+
+int levelThemeIndex(int levelNumber)
+{
+    return levelNumber <= 0 ? 0 : (levelNumber - 1) % 5;
+}
 
 const LevelVisualAssets& levelVisualAssets(int levelNumber)
 {
@@ -180,9 +189,7 @@ const LevelVisualAssets& levelVisualAssets(int levelNumber)
         {"level_lava_background", "level_lava_tiles", "level_lava_pipes"},
     }};
 
-    if (levelNumber <= 0)
-        return assets.front();
-    return assets[static_cast<std::size_t>((levelNumber - 1) % static_cast<int>(assets.size()))];
+    return assets[static_cast<std::size_t>(levelThemeIndex(levelNumber))];
 }
 
 bool drawTextureFragment(sf::RenderWindow& window, const sf::Texture& texture, const sf::FloatRect& dst, sf::IntRect src)
@@ -217,8 +224,7 @@ bool drawLevelPipeFragment(sf::RenderWindow& window, const AssetManager& assets,
 
 sf::Color levelTerrainFillColor(int levelNumber)
 {
-    const int theme = levelNumber <= 0 ? 0 : (levelNumber - 1) % 5;
-    switch (theme) {
+    switch (levelThemeIndex(levelNumber)) {
     case 1:
         return sf::Color(194, 162, 86);
     case 2:
@@ -232,8 +238,9 @@ sf::Color levelTerrainFillColor(int levelNumber)
     }
 }
 
-sf::IntRect levelTerrainSource(TerrainSprite sprite)
+sf::IntRect levelTerrainSource(int levelNumber, TerrainSprite sprite)
 {
+    const int theme = levelThemeIndex(levelNumber);
     switch (sprite) {
     case TerrainSprite::TopLeft:
         return {86, 98, 118, 248};
@@ -241,35 +248,59 @@ sf::IntRect levelTerrainSource(TerrainSprite sprite)
         return {226, 98, 118, 248};
     case TerrainSprite::Inner:
         return {1030, 426, 270, 215};
+    case TerrainSprite::InnerAlt:
+        return {615, 438, 225, 220};
+    case TerrainSprite::InnerDecor:
+        return theme == 3 ? sf::IntRect(1060, 385, 260, 270) : sf::IntRect(115, 475, 270, 180);
+    case TerrainSprite::Side:
+        return {72, 405, 178, 300};
     case TerrainSprite::Crack:
         return {1050, 432, 230, 196};
     case TerrainSprite::Floating:
+        if (theme == 2)
+            return {510, 845, 405, 130};
+        if (theme == 3)
+            return {590, 760, 760, 255};
         return {1004, 802, 345, 214};
+    case TerrainSprite::Question:
+        if (theme == 0)
+            return {585, 750, 285, 280};
+        if (theme == 1)
+            return {600, 760, 300, 285};
+        if (theme == 2)
+            return {1100, 500, 270, 270};
+        if (theme == 3)
+            return {92, 735, 330, 300};
+        return {1100, 455, 265, 280};
     case TerrainSprite::Top:
     default:
         return {142, 98, 148, 248};
     }
 }
 
-sf::IntRect levelPipeCapSource()
+sf::IntRect levelPipeCapSource(int levelNumber)
 {
+    if (levelThemeIndex(levelNumber) == 4)
+        return {428, 108, 252, 118};
     return {418, 38, 248, 126};
 }
 
-sf::IntRect levelPipeBodySource()
+sf::IntRect levelPipeBodySource(int levelNumber)
 {
+    if (levelThemeIndex(levelNumber) == 4)
+        return {459, 225, 180, 490};
     return {454, 164, 178, 545};
 }
 
-sf::IntRect levelPlatformSource()
+sf::IntRect levelPlatformSource(int levelNumber)
 {
-    return levelTerrainSource(TerrainSprite::Floating);
+    return levelTerrainSource(levelNumber, TerrainSprite::Floating);
 }
 
 bool drawLevelTerrainTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect, TerrainSprite sprite)
 {
     drawRect(window, rect, levelTerrainFillColor(levelNumber));
-    return drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource(sprite));
+    return drawLevelTileFragment(window, assets, levelNumber, rect, levelTerrainSource(levelNumber, sprite));
 }
 
 bool isThemeTerrainTile(char tile)
@@ -282,6 +313,20 @@ bool isOpenForTerrain(char tile)
     return tile == '.' || tile == 'C' || tile == 'F' || tile == 'f' || tile == '?' || tile == 'U' || tile == 'P' || tile == 'p';
 }
 
+TerrainSprite chooseInnerTerrainVariant(int row, int col)
+{
+    const int selector = std::abs(col * 37 + row * 17) % 11;
+    if (selector == 0)
+        return TerrainSprite::Crack;
+    if (selector <= 2)
+        return TerrainSprite::InnerAlt;
+    if (selector == 3)
+        return TerrainSprite::InnerDecor;
+    if (selector == 4)
+        return TerrainSprite::Side;
+    return TerrainSprite::Inner;
+}
+
 bool drawLevelPipe(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& bounds)
 {
     const sf::Texture* texture = assets.texture(levelVisualAssets(levelNumber).pipes);
@@ -291,8 +336,8 @@ bool drawLevelPipe(sf::RenderWindow& window, const AssetManager& assets, int lev
     const float capHeight = std::min(bounds.height, Tile * 0.78f);
     const sf::FloatRect capDst(bounds.left - 5.0f, bounds.top - 5.0f, bounds.width + 10.0f, capHeight + 8.0f);
     const sf::FloatRect bodyDst(bounds.left, bounds.top + capHeight * 0.62f, bounds.width, std::max(1.0f, bounds.height - capHeight * 0.62f));
-    drawTextureFragment(window, *texture, bodyDst, levelPipeBodySource());
-    drawTextureFragment(window, *texture, capDst, levelPipeCapSource());
+    drawTextureFragment(window, *texture, bodyDst, levelPipeBodySource(levelNumber));
+    drawTextureFragment(window, *texture, capDst, levelPipeCapSource(levelNumber));
     return true;
 }
 
@@ -1072,7 +1117,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
 
         if (fillStartRow >= 0) {
             for (int row = fillStartRow; row <= visualLastRow; ++row)
-                drawLevelTerrainTile(window, assets, m_number, {col * Tile, row * Tile, Tile, Tile}, TerrainSprite::Inner);
+                drawLevelTerrainTile(window, assets, m_number, {col * Tile, row * Tile, Tile, Tile}, chooseInnerTerrainVariant(row, col));
         }
     }
 
@@ -1084,7 +1129,7 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
         const sf::FloatRect r = platform.rect;
         const sf::FloatRect visual(r.left - 4.0f, r.top - 6.0f, r.width + 8.0f, std::max(30.0f, r.height + 28.0f));
         drawRect(window, visual, levelTerrainFillColor(m_number));
-        if (drawLevelTileFragment(window, assets, m_number, visual, levelPlatformSource()))
+        if (drawLevelTileFragment(window, assets, m_number, visual, levelPlatformSource(m_number)))
             continue;
         const sf::Color body = platform.disappearing ? sf::Color(216, 138, 72) : sf::Color(190, 92, 49);
         drawRect(window, r, body);
@@ -1402,7 +1447,7 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
     } else if (tile == 'D') {
         const bool leftOpen = isOpenForTerrain(tileAt(row, col - 1));
         const bool rightOpen = isOpenForTerrain(tileAt(row, col + 1));
-        const TerrainSprite sprite = leftOpen ? TerrainSprite::TopLeft : rightOpen ? TerrainSprite::TopRight : TerrainSprite::Inner;
+        const TerrainSprite sprite = leftOpen ? TerrainSprite::Side : rightOpen ? TerrainSprite::Side : chooseInnerTerrainVariant(row, col);
         if (drawLevelTerrainTile(window, assets, m_number, rect, sprite))
             return;
         drawRect(window, rect, sf::Color(156, 84, 43), sf::Color(87, 48, 35));
@@ -1418,6 +1463,8 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         drawRect(window, {rect.left + 5.0f, rect.top + 11.0f, 2.0f, 10.0f}, sf::Color(92, 45, 34));
         drawRect(window, {rect.left + 24.0f, rect.top + 22.0f, 2.0f, 10.0f}, sf::Color(92, 45, 34));
     } else if (tile == '?' || tile == 'U') {
+        if (drawLevelTerrainTile(window, assets, m_number, rect, tile == '?' ? TerrainSprite::Question : TerrainSprite::InnerDecor))
+            return;
         drawRect(window, rect, tile == '?' ? sf::Color(244, 176, 45) : sf::Color(126, 112, 86), sf::Color(92, 63, 40));
         drawRect(window, {rect.left + 3.0f, rect.top + 3.0f, rect.width - 6.0f, rect.height - 6.0f}, tile == '?' ? sf::Color(255, 200, 65) : sf::Color(146, 132, 100));
         if (tile == '?' && assets.hasFont()) {
