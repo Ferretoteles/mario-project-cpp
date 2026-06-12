@@ -311,23 +311,23 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
     }
 
     if (mainMenu && !m_items.empty()) {
-        const float spin = std::abs(std::sin(time * 5.8f));
-        const float coinSize = std::clamp(selectedCardH * 0.9f, 24.0f, 34.0f);
-        const sf::Vector2f coinPos(selectedCardPos.x + selectedCardW * 0.5f + coinSize * 0.85f, selectedCardPos.y);
+        const float coinSize = std::clamp(selectedCardH * 1.35f, 40.0f, 52.0f);
+        const float coinX = std::min(panel.getPosition().x + panelW * 0.5f - coinSize * 0.72f,
+                                     selectedCardPos.x + selectedCardW * 0.5f + coinSize * 1.05f);
+        const sf::Vector2f coinPos(coinX, selectedCardPos.y);
         if (const sf::Texture* coin = assets.texture("menu_coin")) {
             sf::Sprite sprite(*coin);
             sprite.setOrigin(coin->getSize().x * 0.5f, coin->getSize().y * 0.5f);
             sprite.setPosition(coinPos);
-            sprite.setScale((0.42f + 0.58f * spin) * coinSize / static_cast<float>(coin->getSize().x),
+            sprite.setScale(coinSize / static_cast<float>(coin->getSize().x),
                             coinSize / static_cast<float>(coin->getSize().y));
-            sprite.setColor(sf::Color(255, static_cast<sf::Uint8>(210 + 45 * spin), static_cast<sf::Uint8>(135 + 60 * spin)));
+            sprite.setColor(sf::Color::White);
             window.draw(sprite);
         } else {
             sf::CircleShape coinShape(coinSize * 0.5f, 28);
             coinShape.setOrigin(coinSize * 0.5f, coinSize * 0.5f);
             coinShape.setPosition(coinPos);
-            coinShape.setScale(0.36f + 0.64f * spin, 1.0f);
-            coinShape.setFillColor(sf::Color(255, static_cast<sf::Uint8>(194 + 48 * spin), 54));
+            coinShape.setFillColor(sf::Color(255, 216, 54));
             coinShape.setOutlineColor(sf::Color(112, 70, 20));
             coinShape.setOutlineThickness(2.0f);
             window.draw(coinShape);

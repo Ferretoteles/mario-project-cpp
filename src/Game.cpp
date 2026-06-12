@@ -458,7 +458,7 @@ void Game::setState(AppState state)
 {
     m_state = state;
     if (state == AppState::Title)
-        m_menu.set("MARIO STYLE RUN", {"Start", "Postać", "Wybór poziomu", "Custom levele", "Sklep", "Osiągnięcia", "Sterowanie", "Ustawienia", "Wyjście"});
+        m_menu.set("MARIO STYLE RUN", {"Start", "Postac", "Wybor poziomu", "Custom levele", "Sklep", "Osiagniecia", "Sterowanie", "Ustawienia", "Wyjscie"});
     if (state == AppState::Paused)
         m_menu.set("PAUZA", {"Resume", "Restart", "Sterowanie", "Exit"});
     if (state == AppState::CustomSelect) {
