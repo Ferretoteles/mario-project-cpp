@@ -31,8 +31,6 @@ struct TeleportPipe {
 class Level {
 public:
     void build(int number);
-    bool saveCustom(const std::filesystem::path& path) const;
-    bool loadCustom(const std::filesystem::path& path);
     void update(float dt);
     void draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode world, bool secretsRevealed, float time, bool castleInterior = false) const;
 

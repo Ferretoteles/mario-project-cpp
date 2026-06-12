@@ -168,8 +168,6 @@ void Game::processEvents()
             handleKeyPressed(event.key.code);
         } else if (event.type == sf::Event::KeyReleased) {
             handleKeyReleased(event.key.code);
-        } else if (event.type == sf::Event::MouseButtonPressed) {
-            handleMousePressed(event.mouseButton.button, {event.mouseButton.x, event.mouseButton.y});
         }
     }
 }
@@ -236,16 +234,13 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             } else if (choice == 2) {
                 setState(AppState::LevelSelect);
             } else if (choice == 3) {
-                m_customMessage.clear();
-                setState(AppState::CustomSelect);
-            } else if (choice == 4) {
                 setState(AppState::Shop);
-            } else if (choice == 5) {
+            } else if (choice == 4) {
                 setState(AppState::Achievements);
-            } else if (choice == 6) {
+            } else if (choice == 5) {
                 m_controlsReturnState = AppState::Title;
                 setState(AppState::Controls);
-            } else if (choice == 7) {
+            } else if (choice == 6) {
                 setState(AppState::Settings);
             } else {
                 m_window.close();
@@ -266,27 +261,6 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
         if (key == sf::Keyboard::Enter && m_selectedLevel <= (m_adminMode ? 5 : m_save.unlockedLevel)) {
             AudioManager::instance().play("menu_select");
             loadLevel(m_selectedLevel);
-        }
-        return;
-    }
-
-    if (m_state == AppState::CustomSelect) {
-        if (key == sf::Keyboard::Up || key == sf::Keyboard::W) {
-            m_menu.up();
-            AudioManager::instance().play("menu_move");
-        }
-        if (key == sf::Keyboard::Down || key == sf::Keyboard::S) {
-            m_menu.down();
-            AudioManager::instance().play("menu_move");
-        }
-        if (key == sf::Keyboard::Enter) {
-            m_menu.activateSelection();
-            AudioManager::instance().play("menu_select");
-            const int choice = m_menu.index();
-            if (choice >= 0 && choice < 3)
-                startCustomLevel(choice + 1);
-            else
-                setState(AppState::Title);
         }
         return;
     }
@@ -351,10 +325,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
         }
         if (key == sf::Keyboard::R) {
             AudioManager::instance().play("menu_select");
-            if (m_playingCustomLevel)
-                startCustomLevel(m_customSlot);
-            else
-                loadLevel(m_currentLevel);
+            loadLevel(m_currentLevel);
         }
         if (key == sf::Keyboard::Q) {
             AudioManager::instance().play("menu_select");
@@ -366,7 +337,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             if (m_menu.index() == 0)
                 setState(AppState::Playing);
             else if (m_menu.index() == 1)
-                m_playingCustomLevel ? startCustomLevel(m_customSlot) : loadLevel(m_currentLevel);
+                loadLevel(m_currentLevel);
             else if (m_menu.index() == 2) {
                 m_controlsReturnState = AppState::Paused;
                 setState(AppState::Controls);
@@ -404,33 +375,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             m_projectiles.emplace_back(origin, sf::Vector2f(m_player.facing() * 450.0f, -55.0f), true, 2, sf::Color::White);
             AudioManager::instance().play("boss");
         }
-        if (key == sf::Keyboard::F2)
-            setState(AppState::Editor);
         return;
-    }
-
-    if (m_state == AppState::Editor) {
-        if (key == sf::Keyboard::F2)
-            setState(AppState::Playing);
-        if (key == sf::Keyboard::F5)
-            saveCustomLevel();
-        if (key == sf::Keyboard::F6)
-            loadCustomLevel(m_customSlot);
-        if (key == sf::Keyboard::Num8) {
-            m_customSlot = m_customSlot == 1 ? 3 : m_customSlot - 1;
-            m_customMessage = "Aktywny custom slot: " + std::to_string(m_customSlot);
-        }
-        if (key == sf::Keyboard::Num9) {
-            m_customSlot = m_customSlot == 3 ? 1 : m_customSlot + 1;
-            m_customMessage = "Aktywny custom slot: " + std::to_string(m_customSlot);
-        }
-        if (key == sf::Keyboard::Num1) m_editorTile = 'G';
-        if (key == sf::Keyboard::Num2) m_editorTile = 'B';
-        if (key == sf::Keyboard::Num3) m_editorTile = '?';
-        if (key == sf::Keyboard::Num4) m_editorTile = '^';
-        if (key == sf::Keyboard::Num5) m_editorTile = '~';
-        if (key == sf::Keyboard::Num6) m_editorTile = 'T';
-        if (key == sf::Keyboard::Num7) m_editorTile = 'S';
     }
 }
 
@@ -439,13 +384,6 @@ void Game::handleKeyReleased(sf::Keyboard::Key key)
     const int code = static_cast<int>(key);
     if (code >= 0 && code < static_cast<int>(m_keys.size()))
         m_keys[static_cast<std::size_t>(code)] = false;
-}
-
-void Game::handleMousePressed(sf::Mouse::Button button, sf::Vector2i pixel)
-{
-    if (m_state != AppState::Editor)
-        return;
-    editorPaint(pixel, button == sf::Mouse::Left ? m_editorTile : '.');
 }
 
 bool Game::keyDown(sf::Keyboard::Key key) const
@@ -458,17 +396,9 @@ void Game::setState(AppState state)
 {
     m_state = state;
     if (state == AppState::Title)
-        m_menu.set("MARIO STYLE RUN", {"Start", "Postac", "Wybor poziomu", "Custom levele", "Sklep", "Osiagniecia", "Sterowanie", "Ustawienia", "Wyjscie"});
+        m_menu.set("MARIO STYLE RUN", {"Start", "Postac", "Wybor poziomu", "Sklep", "Osiagniecia", "Sterowanie", "Ustawienia", "Wyjscie"});
     if (state == AppState::Paused)
         m_menu.set("PAUZA", {"Resume", "Restart", "Sterowanie", "Exit"});
-    if (state == AppState::CustomSelect) {
-        m_menu.set("CUSTOM LEVELE", {
-            std::string("Slot 1: ") + (customLevelExists(1) ? "Start" : "brak"),
-            std::string("Slot 2: ") + (customLevelExists(2) ? "Start" : "brak"),
-            std::string("Slot 3: ") + (customLevelExists(3) ? "Start" : "brak"),
-            "Powrot"
-        });
-    }
     if (state == AppState::Shop) {
         m_shopMessage.clear();
         m_menu.set("SKLEP", {"Serce +1 - 25 monet", "Grzybek na start - 35", "Tarcza - 50", "Klucz bonusowy - 60", "Powrot"});
@@ -486,7 +416,6 @@ void Game::loadSaveSlot(int slot)
 
 void Game::loadLevel(int level)
 {
-    m_playingCustomLevel = false;
     m_currentLevel = std::clamp(level, 1, 5);
     m_level.build(m_currentLevel);
     m_world = WorldMode::Normal;
@@ -524,69 +453,6 @@ void Game::loadLevel(int level)
     m_screenShakeStrength = 0.0f;
     spawnFromLevel();
     setState(AppState::Playing);
-}
-
-void Game::startCustomLevel(int slot)
-{
-    m_customSlot = std::clamp(slot, 1, 3);
-    if (!loadCustomLevel(m_customSlot)) {
-        m_customMessage = "Brak custom levela w slocie " + std::to_string(m_customSlot);
-        setState(AppState::CustomSelect);
-        return;
-    }
-    setState(AppState::Playing);
-}
-
-bool Game::saveCustomLevel()
-{
-    const bool saved = m_level.saveCustom(customLevelPath(m_customSlot));
-    m_customMessage = saved ? "Zapisano custom_" + std::to_string(m_customSlot) + ".json" : "Nie udalo sie zapisac custom levela";
-    return saved;
-}
-
-bool Game::loadCustomLevel(int slot)
-{
-    m_customSlot = std::clamp(slot, 1, 3);
-    if (!m_level.loadCustom(customLevelPath(m_customSlot))) {
-        m_customMessage = "Brak custom levela w slocie " + std::to_string(m_customSlot);
-        return false;
-    }
-
-    m_playingCustomLevel = true;
-    m_currentLevel = 0;
-    m_world = WorldMode::Normal;
-    m_checkpoint = m_level.playerStart();
-    m_activeCheckpointCol = -1;
-    m_player.reset(m_checkpoint, m_save);
-    m_bossFightStarted = false;
-    m_castleInterior = false;
-    m_castlePhase = CastleCutscenePhase::None;
-    m_dungeonStage = DungeonStage::Outside;
-    m_pendingDungeonStage = DungeonStage::Outside;
-    m_castleTimer = 0.0f;
-    m_castleDoorOpen = 0.0f;
-    m_dungeonStageTransitionTimer = 0.0f;
-    m_dungeonMessageTimer = 0.0f;
-    m_bossItemTimer = 0.0f;
-    m_enemies.clear();
-    m_items.clear();
-    m_projectiles.clear();
-    m_particles.clear();
-    m_quests.resetForLevel(1);
-    m_screenShakeTimer = 0.0f;
-    m_screenShakeStrength = 0.0f;
-    m_customMessage = "Wczytano custom_" + std::to_string(m_customSlot) + ".json";
-    return true;
-}
-
-bool Game::customLevelExists(int slot) const
-{
-    return std::filesystem::exists(customLevelPath(slot));
-}
-
-std::filesystem::path Game::customLevelPath(int slot) const
-{
-    return m_assetRoot / ("custom_" + std::to_string(std::clamp(slot, 1, 3)) + ".json");
 }
 
 void Game::spawnFromLevel()
@@ -821,7 +687,7 @@ void Game::updateDungeonStages(float dt)
 void Game::update(float dt)
 {
     AudioManager::instance().update();
-    if (m_state == AppState::Playing || m_state == AppState::Editor)
+    if (m_state == AppState::Playing)
         updatePlaying(dt);
     updateParticles(dt);
 }
@@ -1040,12 +906,6 @@ void Game::updateCollisions()
 
 void Game::completeLevel()
 {
-    if (m_playingCustomLevel) {
-        m_ending = "Custom level ukonczony";
-        setState(AppState::Victory);
-        return;
-    }
-
     m_achievements.evaluate(m_player.stats(), m_currentLevel);
     m_save.completedLevels.insert(m_currentLevel);
     m_save.unlockedLevel = std::max(m_save.unlockedLevel, std::min(5, m_currentLevel + 1));
@@ -1133,18 +993,10 @@ void Game::buyShopItem(int index)
     m_saveManager.save(m_save);
 }
 
-void Game::editorPaint(sf::Vector2i pixel, char tile)
-{
-    const sf::Vector2f world = m_window.mapPixelToCoords(pixel, m_worldView);
-    const int col = static_cast<int>(world.x / Tile);
-    const int row = static_cast<int>(world.y / Tile);
-    m_level.setTile(row, col, tile);
-}
-
 void Game::render()
 {
     m_window.clear();
-    if (m_state == AppState::Playing || m_state == AppState::Paused || m_state == AppState::Editor)
+    if (m_state == AppState::Playing || m_state == AppState::Paused)
         drawWorld();
     else {
         m_window.setView(m_uiView);
@@ -1162,8 +1014,6 @@ void Game::render()
         drawSettings();
     else if (m_state == AppState::Controls)
         drawControls();
-    else if (m_state == AppState::CustomSelect)
-        drawCustomSelect();
     else if (m_state == AppState::Shop)
         drawShop();
     else if (m_state == AppState::Achievements)
@@ -1176,8 +1026,6 @@ void Game::render()
         drawGameOver();
     else if (m_state == AppState::Victory)
         drawVictory();
-    else if (m_state == AppState::Editor)
-        drawEditor();
 
     m_window.display();
 }
@@ -1314,7 +1162,7 @@ void Game::drawHud()
     if (m_player.hasKey())
         drawTextureIcon(m_window, m_assets, "key", {134.0f + hearts * heartStep + 18.0f, 31.0f}, 25.0f);
 
-    drawText(m_playingCustomLevel ? "CUSTOM " + std::to_string(m_customSlot) : "WORLD " + std::to_string(m_currentLevel) + "-1", 17, {std::round(size.x * 0.5f), 31.0f}, sf::Color(255, 244, 192), true);
+    drawText("WORLD " + std::to_string(m_currentLevel) + "-1", 17, {std::round(size.x * 0.5f), 31.0f}, sf::Color(255, 244, 192), true);
 
     const int seconds = static_cast<int>(m_player.stats().time);
     const int timeLeft = std::max(0, 400 - seconds);
@@ -1635,17 +1483,14 @@ void Game::drawControls()
     const sf::Vector2f size = m_uiView.getSize();
     drawText("STEROWANIE", 42, {size.x * 0.5f, 70.0f}, sf::Color(255, 232, 150), true, 3.0f);
 
-    const std::array<std::string, 10> rows{{
+    const std::array<std::string, 7> rows{{
         "Ruch: A/D lub strzalki",
         "Skok: Spacja / W / strzalka w gore",
         "Dash: LShift",
         "Fireball: X albo C po zebraniu Fire Flower",
         "Latarnia / ghost mode: L",
         "Sklep: menu glowne -> Sklep",
-        "Pauza: P albo Escape",
-        "Edytor: F2 w trakcie gry",
-        "Custom zapis/wczytanie: F5 zapis, F6 wczytanie",
-        "Slot custom: 8 poprzedni, 9 nastepny"
+        "Pauza: P albo Escape"
     }};
 
     const float left = std::max(70.0f, size.x * 0.5f - 300.0f);
@@ -1653,11 +1498,6 @@ void Game::drawControls()
         drawText(rows[static_cast<std::size_t>(i)], 18, {left, 128.0f + i * 32.0f}, sf::Color(232, 242, 255), false, 1.4f);
 
     drawText("ENTER lub ESC - powrot", 17, {size.x * 0.5f, size.y - 46.0f}, sf::Color(255, 232, 150), true);
-}
-
-void Game::drawCustomSelect()
-{
-    m_menu.draw(m_window, m_assets, m_uiView.getSize(), m_customMessage.empty() ? "ENTER uruchamia zapisany slot | ESC powrot" : m_customMessage);
 }
 
 void Game::drawShop()
@@ -1733,13 +1573,6 @@ void Game::drawVictory()
     drawText(m_ending, 30, {m_uiView.getSize().x * 0.5f, 225.0f}, sf::Color(210, 240, 255), true);
     drawText("Osiagniecia: " + std::to_string(m_save.achievements.size()) + "  Najlepszy wynik: " + std::to_string(m_save.bestScore), 20, {m_uiView.getSize().x * 0.5f, 285.0f}, sf::Color::White, true);
     drawText("ENTER - menu", 20, {m_uiView.getSize().x * 0.5f, 340.0f}, sf::Color::White, true);
-}
-
-void Game::drawEditor()
-{
-    drawText("EDITOR: slot " + std::to_string(m_customSlot) + " | 8/9 slot | F5 zapis | F6 wczytaj | 1-7 tile | F2 gra. Tile: " + std::string(1, m_editorTile), 15, {18.0f, m_uiView.getSize().y - 48.0f}, sf::Color(255, 245, 170));
-    if (!m_customMessage.empty())
-        drawText(m_customMessage, 15, {18.0f, m_uiView.getSize().y - 24.0f}, sf::Color(210, 240, 255));
 }
 
 void Game::drawText(const std::string& text, unsigned size, sf::Vector2f pos, sf::Color color, bool center, float outline)

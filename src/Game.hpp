@@ -47,17 +47,11 @@ private:
     void processEvents();
     void handleKeyPressed(sf::Keyboard::Key key);
     void handleKeyReleased(sf::Keyboard::Key key);
-    void handleMousePressed(sf::Mouse::Button button, sf::Vector2i pixel);
     bool keyDown(sf::Keyboard::Key key) const;
 
     void setState(AppState state);
     void loadSaveSlot(int slot);
     void loadLevel(int level);
-    void startCustomLevel(int slot);
-    bool saveCustomLevel();
-    bool loadCustomLevel(int slot);
-    bool customLevelExists(int slot) const;
-    std::filesystem::path customLevelPath(int slot) const;
     void spawnFromLevel();
     std::unique_ptr<Enemy> makeEnemy(const SpawnRequest& spawn);
     void addItemSpawn(const SpawnRequest& spawn);
@@ -80,7 +74,6 @@ private:
     void completeLevel();
     void respawnOrGameOver();
     void buyShopItem(int index);
-    void editorPaint(sf::Vector2i pixel, char tile);
 
     void render();
     void drawWorld();
@@ -96,13 +89,11 @@ private:
     void drawLevelSelect();
     void drawSettings();
     void drawControls();
-    void drawCustomSelect();
     void drawShop();
     void drawAchievements();
     void drawNewspaper();
     void drawGameOver();
     void drawVictory();
-    void drawEditor();
     void drawText(const std::string& text, unsigned size, sf::Vector2f pos, sf::Color color, bool center = false, float outline = 1.5f);
     void spawnBurst(sf::Vector2f pos, sf::Color color, int count);
     void spawnText(const std::string& text, sf::Vector2f pos, sf::Color color);
@@ -147,11 +138,7 @@ private:
     int m_currentLevel = 1;
     int m_selectedLevel = 1;
     int m_selectedSlot = 1;
-    int m_customSlot = 1;
     int m_score = 0;
-    char m_editorTile = 'G';
-    std::string m_customMessage;
-    bool m_playingCustomLevel = false;
     bool m_shopMushroomNextRun = false;
     bool m_shopShieldNextRun = false;
     bool m_shopKeyNextRun = false;

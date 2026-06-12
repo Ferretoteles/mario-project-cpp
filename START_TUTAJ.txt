@@ -30,17 +30,8 @@ F - przelacz normalny swiat / swiat duchow
 E - pomoz NPC / rozmowa
 I - ignoruj NPC
 P - pauza
-F2 - edytor poziomu
 Enter - wybor w menu / dalej
 Escape - powrot albo zamknij
-
-EDYTOR:
-
-F2 - wlacz/wylacz edytor
-Lewy przycisk myszy - postaw kafelek
-Prawy przycisk myszy - usun kafelek
-1-7 - wybierz kafelek
-G - wygeneruj bonusowy pokoj
 
 SAVE:
 

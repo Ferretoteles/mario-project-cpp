@@ -22,15 +22,13 @@ enum class AppState {
     LevelSelect,
     Settings,
     Controls,
-    CustomSelect,
     Playing,
     Paused,
     Shop,
     Achievements,
     Newspaper,
     GameOver,
-    Victory,
-    Editor
+    Victory
 };
 
 enum class WorldMode {
