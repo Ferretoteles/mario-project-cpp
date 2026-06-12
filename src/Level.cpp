@@ -440,11 +440,6 @@ bool drawLevelTerrainTile(sf::RenderWindow& window, const AssetManager& assets, 
     return false;
 }
 
-bool drawSpikeBaseTile(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& rect)
-{
-    return drawLevelTerrainTile(window, assets, levelNumber, rect, TerrainSprite::Top);
-}
-
 void drawLavaTile(sf::RenderWindow& window, const sf::FloatRect& rect, bool topSurface, float time, WorldMode world)
 {
     const sf::Color surface = world == WorldMode::Ghost ? sf::Color(140, 86, 190) : sf::Color(244, 76, 34);
@@ -468,13 +463,6 @@ void drawLavaTile(sf::RenderWindow& window, const sf::FloatRect& rect, bool topS
         drawCircle(window, {rect.left + rect.width * 0.30f, rect.top + rect.height * 0.35f}, rect.width * 0.055f, sf::Color(235, 82, 42, 180));
         drawCircle(window, {rect.left + rect.width * 0.72f, rect.top + rect.height * 0.68f}, rect.width * 0.045f, sf::Color(255, 143, 53, 160));
     }
-}
-
-void drawLavaColumn(sf::RenderWindow& window, const sf::FloatRect& hazardRect, float time, WorldMode world)
-{
-    drawLavaTile(window, {hazardRect.left, hazardRect.top - Tile, hazardRect.width, hazardRect.height}, true, time, world);
-    drawLavaTile(window, hazardRect, false, time, world);
-    drawLavaTile(window, {hazardRect.left, hazardRect.top + Tile, hazardRect.width, hazardRect.height}, false, time, world);
 }
 
 bool isThemeTerrainTile(char tile)
@@ -1327,8 +1315,13 @@ void Level::draw(sf::RenderWindow& window, const AssetManager& assets, WorldMode
 
     for (int row = 0; row < Rows; ++row) {
         for (int col = firstCol; col <= lastCol; ++col) {
-            if (tileAt(row, col) == '~')
-                drawLavaColumn(window, tileRect(row, col), time, world);
+            if (tileAt(row, col) != '~')
+                continue;
+            // Powierzchnie (jasny, swiecacy wierzch) rysujemy tylko na najwyzszym
+            // kaflu lawy - kafle ponizej to ciemny glab. Dzieki temu obraz lawy
+            // pokrywa sie dokladnie z kaflem '~', ktory zadaje obrazenia.
+            const bool surface = tileAt(row - 1, col) != '~';
+            drawLavaTile(window, tileRect(row, col), surface, time, world);
         }
     }
 
@@ -1491,6 +1484,9 @@ void Level::baseGround(const std::vector<std::pair<int, int>>& pits)
 
     for (int col = 0; col < m_columns; ++col) {
         if (inPit(col)) {
+            // Lawa wypelnia jame do poziomu gruntu: gorny kafel (GroundRow) to
+            // powierzchnia bedaca jednoczesnie strefa obrazen, dolny to glab.
+            setTile(GroundRow, col, '~');
             setTile(GroundRow + 1, col, '~');
             continue;
         }
@@ -1701,27 +1697,34 @@ void Level::drawTile(sf::RenderWindow& window, const AssetManager& assets, char 
         if (tile == 'P')
             drawRect(window, {rect.left - 5.0f, rect.top - 6.0f, rect.width + 10.0f, 18.0f}, sf::Color(60, 207, 74), sf::Color(12, 86, 32));
     } else if (tile == '^') {
-        drawSpikeBaseTile(window, assets, m_number, rect);
-        for (int i = 0; i < 3; ++i) {
-            const float step = rect.width / 3.0f;
-            const float baseY = rect.top + rect.height * 0.52f;
+        // Ciemna metalowa podstawa, na ktorej osadzone sa kolce - kafel czyta sie
+        // jako pulapka, a nie jako kolejny blok terenu (wczesniej rysowal sie tu
+        // pelny kafel trawy/lawy z tekstury, co mylilo z podlozem).
+        const float baseTop = rect.top + rect.height * 0.64f;
+        drawRect(window, {rect.left, baseTop, rect.width, rectBottom(rect) - baseTop}, sf::Color(72, 68, 80), sf::Color(36, 33, 42));
+        drawRect(window, {rect.left, baseTop, rect.width, 3.0f}, sf::Color(118, 114, 126));
+        const int count = 3;
+        const float step = rect.width / count;
+        const float baseY = baseTop + 2.0f;
+        for (int i = 0; i < count; ++i) {
+            const float cx = rect.left + (i + 0.5f) * step;
             sf::ConvexShape spike(3);
-            spike.setPoint(0, {rect.left + i * step + 2.0f, baseY});
-            spike.setPoint(1, {rect.left + i * step + step * 0.5f, rect.top + 2.0f});
-            spike.setPoint(2, {rect.left + (i + 1) * step - 2.0f, baseY});
-            spike.setFillColor(sf::Color(236, 238, 232));
+            spike.setPoint(0, {rect.left + i * step + 1.5f, baseY});
+            spike.setPoint(1, {cx, rect.top + 2.0f});
+            spike.setPoint(2, {rect.left + (i + 1) * step - 1.5f, baseY});
+            spike.setFillColor(sf::Color(224, 228, 232));
             spike.setOutlineColor(sf::Color(46, 42, 48));
             spike.setOutlineThickness(1.0f);
             window.draw(spike);
             sf::ConvexShape highlight(3);
-            highlight.setPoint(0, {rect.left + i * step + step * 0.42f, rect.top + 7.0f});
-            highlight.setPoint(1, {rect.left + i * step + step * 0.50f, rect.top + 3.5f});
-            highlight.setPoint(2, {rect.left + i * step + step * 0.50f, baseY - 3.0f});
-            highlight.setFillColor(sf::Color(255, 255, 255, 170));
+            highlight.setPoint(0, {cx - step * 0.12f, baseY - 4.0f});
+            highlight.setPoint(1, {cx, rect.top + 4.0f});
+            highlight.setPoint(2, {cx + 1.0f, baseY - 4.0f});
+            highlight.setFillColor(sf::Color(255, 255, 255, 165));
             window.draw(highlight);
         }
     } else if (tile == '~') {
-        drawLavaColumn(window, rect, time, world);
+        drawLavaTile(window, rect, true, time, world);
     } else if (tile == 'T') {
         drawRect(window, rect, sf::Color(54, 178, 226), sf::Color(22, 80, 110));
         drawRect(window, {rect.left + 4.0f, rect.top + rect.height * 0.25f, rect.width - 8.0f, rect.height * 0.18f}, sf::Color(255, 230, 88));
