@@ -95,9 +95,10 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
         drawText(subtitle, 16, {size.x * 0.5f, 126.0f}, sf::Color(255, 244, 190), true);
 
     const float itemW = std::min(430.0f, size.x - 140.0f);
-    const float itemH = 42.0f;
-    const float firstY = 174.0f;
-    const float itemStep = 50.0f;
+    const float firstY = 164.0f;
+    const float itemStep = m_items.size() > 1 ? std::min(50.0f, (size.y - 212.0f) / static_cast<float>(m_items.size() - 1)) : 50.0f;
+    const float itemH = std::clamp(itemStep - 8.0f, 30.0f, 42.0f);
+    const unsigned itemTextSize = m_items.size() > 7 ? 19 : 22;
     for (int i = 0; i < static_cast<int>(m_items.size()); ++i) {
         const bool selected = i == m_selected;
         const float y = firstY + i * itemStep;
@@ -108,7 +109,7 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
         card.setOutlineColor(selected ? sf::Color(255, 248, 150) : sf::Color(122, 72, 38, 190));
         card.setOutlineThickness(selected ? 3.0f : 1.0f);
         window.draw(card);
-        drawText(m_items[static_cast<std::size_t>(i)], 22, {card.getPosition().x, card.getPosition().y + 1.0f}, sf::Color::White, true);
+        drawText(m_items[static_cast<std::size_t>(i)], itemTextSize, {card.getPosition().x, card.getPosition().y + 1.0f}, sf::Color::White, true);
     }
 
     sf::RectangleShape ground({size.x, 34.0f});

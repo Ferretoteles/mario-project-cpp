@@ -21,6 +21,8 @@ enum class AppState {
     Title,
     LevelSelect,
     Settings,
+    Controls,
+    CustomSelect,
     Playing,
     Paused,
     Shop,

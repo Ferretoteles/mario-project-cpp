@@ -53,6 +53,11 @@ private:
     void setState(AppState state);
     void loadSaveSlot(int slot);
     void loadLevel(int level);
+    void startCustomLevel(int slot);
+    bool saveCustomLevel();
+    bool loadCustomLevel(int slot);
+    bool customLevelExists(int slot) const;
+    std::filesystem::path customLevelPath(int slot) const;
     void spawnFromLevel();
     std::unique_ptr<Enemy> makeEnemy(const SpawnRequest& spawn);
     void addItemSpawn(const SpawnRequest& spawn);
@@ -90,6 +95,8 @@ private:
     void ensureLightMask();
     void drawLevelSelect();
     void drawSettings();
+    void drawControls();
+    void drawCustomSelect();
     void drawShop();
     void drawAchievements();
     void drawNewspaper();
@@ -109,6 +116,7 @@ private:
     sf::Texture m_lightMask;
     std::array<bool, sf::Keyboard::KeyCount> m_keys{};
     AppState m_state = AppState::Title;
+    AppState m_controlsReturnState = AppState::Title;
 
     std::filesystem::path m_assetRoot;
     AssetManager m_assets;
@@ -139,8 +147,11 @@ private:
     int m_currentLevel = 1;
     int m_selectedLevel = 1;
     int m_selectedSlot = 1;
+    int m_customSlot = 1;
     int m_score = 0;
     char m_editorTile = 'G';
+    std::string m_customMessage;
+    bool m_playingCustomLevel = false;
     bool m_shopMushroomNextRun = false;
     bool m_shopShieldNextRun = false;
     bool m_shopKeyNextRun = false;
