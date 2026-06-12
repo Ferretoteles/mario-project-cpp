@@ -38,7 +38,11 @@ void AssetManager::load()
     loadTexture("background_mountains", "spritesheets/background_mountains.png");
     loadTexture("background_trees", "spritesheets/background_trees.png");
     loadTexture("background_clouds", "spritesheets/background_clouds.png");
-    loadTexture("main_menu_bg", "backgrounds/main_menu_bg.png");
+    loadTexture("menu_back", "menu/back.png");
+    loadTexture("menu_clouds", "menu/clouds_sheet.png");
+    loadTexture("menu_coin", "menu/coin.png");
+    loadTexture("menu_button", "menu/menu_button_pressed.png");
+    loadTexture("menu_panel", "menu/menu_panel.png");
     loadTexture("final_castle_background", "backgrounds/final_castle_background.png");
     loadTexture("castle_exterior", "backgrounds/castle_exterior.png");
     loadTexture("castle_dungeon_arena", "backgrounds/castle_dungeon_arena.png");

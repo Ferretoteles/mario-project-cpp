@@ -53,8 +53,12 @@ W menu startowym klawisze 1/2/3 wybieraja slot zapisu.
 
 MENU GLOWNE:
 
-Menu glowne uzywa tla:
-assets/backgrounds/main_menu_bg.png
+Menu glowne korzysta teraz z osobnych assetow:
+assets/menu/back.png
+assets/menu/menu_panel.png
+assets/menu/menu_button_pressed.png
+assets/menu/clouds_sheet.png
+assets/menu/coin.png
 
 Dodano spokojnie poruszajace sie chmury, animowana monete przy aktywnej
 opcji oraz efekt podswietlenia i klikniecia wybranej opcji.

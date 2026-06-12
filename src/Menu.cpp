@@ -28,6 +28,19 @@ void drawCoverTexture(sf::RenderWindow& window, const sf::Texture& texture, sf::
     window.draw(sprite);
 }
 
+void drawSpriteInRect(sf::RenderWindow& window, const sf::Texture& texture, sf::FloatRect rect, sf::Color color = sf::Color::White)
+{
+    const sf::Vector2u texSize = texture.getSize();
+    if (texSize.x == 0 || texSize.y == 0)
+        return;
+
+    sf::Sprite sprite(texture);
+    sprite.setPosition(rect.left, rect.top);
+    sprite.setScale(rect.width / static_cast<float>(texSize.x), rect.height / static_cast<float>(texSize.y));
+    sprite.setColor(color);
+    window.draw(sprite);
+}
+
 void drawSoftCloud(sf::RenderWindow& window, sf::Vector2f pos, float scale, sf::Uint8 alpha)
 {
     const sf::Color cloudColor(255, 255, 255, alpha);
@@ -61,6 +74,34 @@ void drawFallbackMenuBackground(sf::RenderWindow& window, sf::Vector2f size)
     background[2].color = sf::Color(184, 224, 248);
     background[3].color = sf::Color(184, 224, 248);
     window.draw(background);
+}
+
+void drawMenuClouds(sf::RenderWindow& window, const sf::Texture& texture, sf::Vector2f size, float time)
+{
+    const sf::Vector2u texSize = texture.getSize();
+    if (texSize.x == 0 || texSize.y == 0)
+        return;
+
+    const int cloudCount = 3;
+    const int cloudH = static_cast<int>(texSize.y / cloudCount);
+    const float widths[cloudCount] = {210.0f, 260.0f, 180.0f};
+    const float speeds[cloudCount] = {18.0f, 12.0f, 15.0f};
+    const float yPositions[cloudCount] = {28.0f, 82.0f, 138.0f};
+    const float offsets[cloudCount] = {40.0f, 330.0f, 650.0f};
+
+    for (int i = 0; i < cloudCount; ++i) {
+        const sf::IntRect rect(0, i * cloudH, static_cast<int>(texSize.x), i == cloudCount - 1 ? static_cast<int>(texSize.y) - i * cloudH : cloudH);
+        const float cloudW = std::min(widths[i], size.x * 0.32f);
+        const float cloudHeight = cloudW * static_cast<float>(rect.height) / static_cast<float>(rect.width);
+        const float span = size.x + cloudW + 80.0f;
+        const float x = size.x + 40.0f - std::fmod(time * speeds[i] + offsets[i], span);
+
+        sf::Sprite cloud(texture, rect);
+        cloud.setPosition(std::round(x), std::round(yPositions[i]));
+        cloud.setScale(cloudW / static_cast<float>(rect.width), cloudHeight / static_cast<float>(rect.height));
+        cloud.setColor(sf::Color(255, 255, 255, 185));
+        window.draw(cloud);
+    }
 }
 }
 
@@ -103,22 +144,17 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
     const float now = m_effectClock.getElapsedTime().asSeconds();
 
     if (mainMenu) {
-        if (const sf::Texture* bg = assets.texture("main_menu_bg"))
+        if (const sf::Texture* bg = assets.texture("menu_back"))
             drawCoverTexture(window, *bg, size);
         else
             drawFallbackMenuBackground(window, size);
 
         sf::RectangleShape shade(size);
-        shade.setFillColor(sf::Color(8, 14, 26, 68));
+        shade.setFillColor(sf::Color(6, 12, 24, 38));
         window.draw(shade);
 
-        for (int i = 0; i < 5; ++i) {
-            const float speed = 12.0f + i * 4.0f;
-            const float span = size.x + 260.0f;
-            const float x = size.x + 90.0f - std::fmod(time * speed + i * 190.0f, span);
-            const float y = 34.0f + static_cast<float>((i * 47) % 132);
-            drawSoftCloud(window, {x, y}, 0.42f + i * 0.05f, static_cast<sf::Uint8>(72 + i * 14));
-        }
+        if (const sf::Texture* clouds = assets.texture("menu_clouds"))
+            drawMenuClouds(window, *clouds, size, time);
     } else {
         drawFallbackMenuBackground(window, size);
     }
@@ -146,22 +182,45 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
     }
     }
 
-    const float panelW = mainMenu ? std::min(470.0f, size.x - 80.0f) : std::min(520.0f, size.x - 80.0f);
-    const float panelH = mainMenu ? std::min(size.y - 76.0f, 448.0f) : std::min(390.0f, size.y - 120.0f);
+    float panelW = mainMenu ? std::min(430.0f, size.x - 44.0f) : std::min(520.0f, size.x - 80.0f);
+    float panelH = mainMenu ? std::min(520.0f, size.y - 20.0f) : std::min(390.0f, size.y - 120.0f);
+    if (mainMenu) {
+        if (const sf::Texture* panelTexture = assets.texture("menu_panel")) {
+            const sf::Vector2u panelSize = panelTexture->getSize();
+            if (panelSize.x > 0 && panelSize.y > 0) {
+                panelW = panelH * static_cast<float>(panelSize.x) / static_cast<float>(panelSize.y);
+                if (panelW > size.x - 44.0f) {
+                    panelW = size.x - 44.0f;
+                    panelH = panelW * static_cast<float>(panelSize.y) / static_cast<float>(panelSize.x);
+                }
+            }
+        }
+    }
     sf::RectangleShape panel({panelW, panelH});
     panel.setOrigin(panel.getSize().x * 0.5f, panel.getSize().y * 0.5f);
-    panel.setPosition(mainMenu ? std::round(size.x * 0.31f) : size.x * 0.5f, mainMenu ? std::round(size.y * 0.53f) : size.y * 0.52f);
+    panel.setPosition(size.x * 0.5f, mainMenu ? std::round(size.y * 0.5f) : size.y * 0.52f);
     panel.setFillColor(mainMenu ? sf::Color(20, 28, 52, 214) : sf::Color(36, 58, 128, 222));
     panel.setOutlineColor(mainMenu ? sf::Color(255, 230, 104, 230) : sf::Color(252, 225, 92, 220));
     panel.setOutlineThickness(3.0f);
     if (mainMenu) {
+        if (const sf::Texture* panelTexture = assets.texture("menu_panel")) {
+            drawSpriteInRect(window, *panelTexture, {panel.getPosition().x - panelW * 0.5f, panel.getPosition().y - panelH * 0.5f, panelW, panelH});
+        } else {
+            sf::RectangleShape shadow(panel.getSize() + sf::Vector2f(10.0f, 12.0f));
+            shadow.setOrigin(shadow.getSize().x * 0.5f, shadow.getSize().y * 0.5f);
+            shadow.setPosition(panel.getPosition() + sf::Vector2f(6.0f, 8.0f));
+            shadow.setFillColor(sf::Color(0, 0, 0, 92));
+            window.draw(shadow);
+            window.draw(panel);
+        }
+    } else {
         sf::RectangleShape shadow(panel.getSize() + sf::Vector2f(10.0f, 12.0f));
         shadow.setOrigin(shadow.getSize().x * 0.5f, shadow.getSize().y * 0.5f);
         shadow.setPosition(panel.getPosition() + sf::Vector2f(6.0f, 8.0f));
         shadow.setFillColor(sf::Color(0, 0, 0, 92));
         window.draw(shadow);
+        window.draw(panel);
     }
-    window.draw(panel);
 
     if (!assets.hasFont())
         return;
@@ -187,18 +246,19 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
 
     const float panelTop = panel.getPosition().y - panel.getSize().y * 0.5f;
     const float panelBottom = panel.getPosition().y + panel.getSize().y * 0.5f;
-    drawTitle(m_title, mainMenu ? 42 : 48, mainMenu ? sf::Vector2f(panel.getPosition().x, panelTop + 40.0f) : sf::Vector2f(size.x * 0.5f, 78.0f));
+    drawTitle(m_title, mainMenu ? 34 : 48, mainMenu ? sf::Vector2f(panel.getPosition().x, panelTop + 46.0f) : sf::Vector2f(size.x * 0.5f, 78.0f));
     if (!subtitle.empty())
-        drawText(subtitle, mainMenu ? 13 : 16, mainMenu ? sf::Vector2f(panel.getPosition().x, panelTop + 79.0f) : sf::Vector2f(size.x * 0.5f, 126.0f), sf::Color(255, 244, 190), true);
+        drawText(subtitle, mainMenu ? 12 : 16, mainMenu ? sf::Vector2f(panel.getPosition().x, panelTop + 82.0f) : sf::Vector2f(size.x * 0.5f, 126.0f), sf::Color(255, 244, 190), true);
 
-    const float itemW = mainMenu ? panelW - 70.0f : std::min(430.0f, size.x - 140.0f);
-    const float firstY = mainMenu ? panelTop + 112.0f : 164.0f;
-    const float listBottom = mainMenu ? panelBottom - 42.0f : size.y - 48.0f;
-    const float itemStep = m_items.size() > 1 ? std::min(mainMenu ? 36.0f : 50.0f, (listBottom - firstY) / static_cast<float>(m_items.size() - 1)) : 50.0f;
-    const float itemH = std::clamp(itemStep - (mainMenu ? 7.0f : 8.0f), mainMenu ? 28.0f : 30.0f, mainMenu ? 34.0f : 42.0f);
-    const unsigned itemTextSize = mainMenu ? 17 : (m_items.size() > 7 ? 19 : 22);
+    const float itemW = mainMenu ? panelW * 0.78f : std::min(430.0f, size.x - 140.0f);
+    const float firstY = mainMenu ? panelTop + 128.0f : 164.0f;
+    const float listBottom = mainMenu ? panelBottom - 58.0f : size.y - 48.0f;
+    const float itemStep = m_items.size() > 1 ? std::min(mainMenu ? 42.0f : 50.0f, (listBottom - firstY) / static_cast<float>(m_items.size() - 1)) : 50.0f;
+    const float itemH = std::clamp(itemStep - (mainMenu ? 8.0f : 8.0f), mainMenu ? 30.0f : 30.0f, mainMenu ? 37.0f : 42.0f);
+    const unsigned itemTextSize = mainMenu ? 16 : (m_items.size() > 7 ? 19 : 22);
     sf::Vector2f selectedCardPos{};
     float selectedCardW = itemW;
+    float selectedCardH = itemH;
     for (int i = 0; i < static_cast<int>(m_items.size()); ++i) {
         const bool selected = i == m_selected;
         const float y = firstY + i * itemStep;
@@ -207,42 +267,60 @@ void Menu::draw(sf::RenderWindow& window, const AssetManager& assets, sf::Vector
         const float grow = selected ? 1.0f + 0.025f + 0.035f * easeOut(movePulse) - 0.025f * clickPulse : 1.0f;
         const float cardW = itemW * grow;
         const float cardH = itemH * grow;
+        const sf::Vector2f cardPos(mainMenu ? std::round(panel.getPosition().x) : std::round(size.x * 0.5f),
+                                   std::round(y + (mainMenu ? 3.0f * movePulse : 0.0f)));
 
         if (selected && mainMenu) {
             sf::RectangleShape glow({cardW + 16.0f, cardH + 12.0f});
             glow.setOrigin(glow.getSize().x * 0.5f, glow.getSize().y * 0.5f);
-            glow.setPosition(std::round(panel.getPosition().x), std::round(y));
+            glow.setPosition(cardPos);
             glow.setFillColor(sf::Color(255, 220, 92, static_cast<sf::Uint8>(52 + 62 * clickPulse)));
             window.draw(glow);
         }
 
-        sf::RectangleShape card({cardW, cardH});
-        card.setOrigin(cardW * 0.5f, cardH * 0.5f);
-        card.setPosition(std::round(size.x * 0.5f), std::round(y));
-        if (mainMenu)
-            card.setPosition(std::round(panel.getPosition().x), std::round(y + 3.0f * movePulse));
-        card.setFillColor(selected ? sf::Color(230, 96, 48, static_cast<sf::Uint8>(238 + 17 * clickPulse)) : (mainMenu ? sf::Color(32, 72, 122, 218) : sf::Color(240, 175, 69, 224)));
-        card.setOutlineColor(selected ? sf::Color(255, 248, 150) : (mainMenu ? sf::Color(146, 184, 218, 178) : sf::Color(122, 72, 38, 190)));
-        card.setOutlineThickness(selected ? 3.0f : 1.0f);
-        window.draw(card);
-        drawText(m_items[static_cast<std::size_t>(i)], itemTextSize, {card.getPosition().x, card.getPosition().y + 1.0f}, sf::Color::White, true);
+        if (mainMenu) {
+            const sf::Color tint = selected
+                ? sf::Color(255, static_cast<sf::Uint8>(240 + 15 * clickPulse), static_cast<sf::Uint8>(190 + 40 * clickPulse))
+                : sf::Color(232, 238, 255, 245);
+            if (const sf::Texture* buttonTexture = assets.texture("menu_button")) {
+                drawSpriteInRect(window, *buttonTexture, {cardPos.x - cardW * 0.5f, cardPos.y - cardH * 0.5f, cardW, cardH}, tint);
+            } else {
+                sf::RectangleShape card({cardW, cardH});
+                card.setOrigin(cardW * 0.5f, cardH * 0.5f);
+                card.setPosition(cardPos);
+                card.setFillColor(selected ? sf::Color(230, 96, 48, static_cast<sf::Uint8>(238 + 17 * clickPulse)) : sf::Color(32, 72, 122, 218));
+                card.setOutlineColor(selected ? sf::Color(255, 248, 150) : sf::Color(146, 184, 218, 178));
+                card.setOutlineThickness(selected ? 3.0f : 1.0f);
+                window.draw(card);
+            }
+        } else {
+            sf::RectangleShape card({cardW, cardH});
+            card.setOrigin(cardW * 0.5f, cardH * 0.5f);
+            card.setPosition(cardPos);
+            card.setFillColor(selected ? sf::Color(230, 96, 48, static_cast<sf::Uint8>(238 + 17 * clickPulse)) : sf::Color(240, 175, 69, 224));
+            card.setOutlineColor(selected ? sf::Color(255, 248, 150) : sf::Color(122, 72, 38, 190));
+            card.setOutlineThickness(selected ? 3.0f : 1.0f);
+            window.draw(card);
+        }
+        drawText(m_items[static_cast<std::size_t>(i)], itemTextSize, {cardPos.x, cardPos.y + 1.0f}, sf::Color::White, true);
         if (selected) {
-            selectedCardPos = card.getPosition();
+            selectedCardPos = cardPos;
             selectedCardW = cardW;
+            selectedCardH = cardH;
         }
     }
 
     if (mainMenu && !m_items.empty()) {
         const float spin = std::abs(std::sin(time * 5.8f));
-        const float coinSize = 24.0f;
-        const sf::Vector2f coinPos(selectedCardPos.x + selectedCardW * 0.5f + 32.0f, selectedCardPos.y);
-        if (const sf::Texture* coin = assets.texture("coin")) {
+        const float coinSize = std::clamp(selectedCardH * 0.9f, 24.0f, 34.0f);
+        const sf::Vector2f coinPos(selectedCardPos.x + selectedCardW * 0.5f + coinSize * 0.85f, selectedCardPos.y);
+        if (const sf::Texture* coin = assets.texture("menu_coin")) {
             sf::Sprite sprite(*coin);
             sprite.setOrigin(coin->getSize().x * 0.5f, coin->getSize().y * 0.5f);
             sprite.setPosition(coinPos);
-            sprite.setScale((0.28f + 0.22f * spin) * coinSize / static_cast<float>(coin->getSize().x),
+            sprite.setScale((0.42f + 0.58f * spin) * coinSize / static_cast<float>(coin->getSize().x),
                             coinSize / static_cast<float>(coin->getSize().y));
-            sprite.setColor(sf::Color(255, static_cast<sf::Uint8>(210 + 45 * spin), 110));
+            sprite.setColor(sf::Color(255, static_cast<sf::Uint8>(210 + 45 * spin), static_cast<sf::Uint8>(135 + 60 * spin)));
             window.draw(sprite);
         } else {
             sf::CircleShape coinShape(coinSize * 0.5f, 28);
