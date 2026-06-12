@@ -224,6 +224,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             AudioManager::instance().play("menu_move");
         }
         if (key == sf::Keyboard::Enter) {
+            m_menu.activateSelection();
             AudioManager::instance().play("menu_select");
             const int choice = m_menu.index();
             if (choice == 0) {
@@ -279,6 +280,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             AudioManager::instance().play("menu_move");
         }
         if (key == sf::Keyboard::Enter) {
+            m_menu.activateSelection();
             AudioManager::instance().play("menu_select");
             const int choice = m_menu.index();
             if (choice >= 0 && choice < 3)
@@ -327,6 +329,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             AudioManager::instance().play("menu_move");
         }
         if (key == sf::Keyboard::Enter) {
+            m_menu.activateSelection();
             AudioManager::instance().play("menu_select");
             buyShopItem(m_menu.index());
         }
@@ -358,6 +361,7 @@ void Game::handleKeyPressed(sf::Keyboard::Key key)
             setState(AppState::Title);
         }
         if (key == sf::Keyboard::Enter) {
+            m_menu.activateSelection();
             AudioManager::instance().play("menu_select");
             if (m_menu.index() == 0)
                 setState(AppState::Playing);
@@ -454,7 +458,7 @@ void Game::setState(AppState state)
 {
     m_state = state;
     if (state == AppState::Title)
-        m_menu.set("MARIO STYLE RUN", {"Start", "Postac: " + m_save.upgrades.activeSkin, "Wybor poziomu", "Custom levele", "Sklep", "Osiagniecia", "Sterowanie", "Ustawienia", "Wyjscie"});
+        m_menu.set("MARIO STYLE RUN", {"Start", "Postac", "Wybor poziomu", "Custom levele", "Sklep", "Osiagniecia", "Sterowanie", "Ustawienia", "Wyjscie"});
     if (state == AppState::Paused)
         m_menu.set("PAUZA", {"Resume", "Restart", "Sterowanie", "Exit"});
     if (state == AppState::CustomSelect) {
@@ -1151,7 +1155,7 @@ void Game::render()
 
     m_window.setView(m_uiView);
     if (m_state == AppState::Title)
-        m_menu.draw(m_window, m_assets, m_uiView.getSize(), "Slot " + std::to_string(m_selectedSlot) + "  |  Monety w banku: " + std::to_string(m_save.bankCoins) + (m_adminMode ? "  |  TEST MODE ON  |  F5 Level 5" : "  |  F9 Test Mode"));
+        m_menu.draw(m_window, m_assets, m_uiView.getSize(), "Slot " + std::to_string(m_selectedSlot) + "  |  Postac: " + m_save.upgrades.activeSkin + "  |  Monety: " + std::to_string(m_save.bankCoins) + (m_adminMode ? "  |  TEST MODE ON" : "  |  F9 Test Mode"), m_time);
     else if (m_state == AppState::LevelSelect)
         drawLevelSelect();
     else if (m_state == AppState::Settings)

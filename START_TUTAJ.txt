@@ -51,6 +51,14 @@ assets/saves/slot3.json
 
 W menu startowym klawisze 1/2/3 wybieraja slot zapisu.
 
+MENU GLOWNE:
+
+Menu glowne uzywa tla:
+assets/backgrounds/main_menu_bg.png
+
+Dodano spokojnie poruszajace sie chmury, animowana monete przy aktywnej
+opcji oraz efekt podswietlenia i klikniecia wybranej opcji.
+
 ASSETY:
 
 Dolaczone sprite sheety sa w:
