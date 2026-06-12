@@ -85,7 +85,16 @@ CollisionResult CollisionManager::move(sf::FloatRect& rect,
 
     const sf::Vector2f feetA(rect.left + 6.0f, rectBottom(rect) + 3.0f);
     const sf::Vector2f feetB(rectRight(rect) - 6.0f, rectBottom(rect) + 3.0f);
-    result.hitHazard = tileHazardAt(level, feetA) || tileHazardAt(level, feetB);
+    // Kolce rania rowniez gdy bohater wbiegnie w nie bokiem, a nie tylko gdy
+    // spadnie na nie z gory. Sondujemy dolna czesc tulowia po obu stronach,
+    // tuz nad stopami - kafel z kolcami lezy zaraz nad podlogiem, na ktorej
+    // stoi gracz. Wysokosc liczona wzgledem stop, wiec dziala dla malej i duzej
+    // postaci, a krawedzie jam z lawa (puste na tej wysokosci) nie dotykaja.
+    const float sideY = rectBottom(rect) - 10.0f;
+    const sf::Vector2f sideA(rect.left + 3.0f, sideY);
+    const sf::Vector2f sideB(rectRight(rect) - 3.0f, sideY);
+    result.hitHazard = tileHazardAt(level, feetA) || tileHazardAt(level, feetB)
+                    || tileHazardAt(level, sideA) || tileHazardAt(level, sideB);
     return result;
 }
 

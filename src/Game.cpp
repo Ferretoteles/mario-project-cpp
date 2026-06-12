@@ -95,11 +95,6 @@ sf::Vector2f bossCheckpointPosition()
     return {96.0f * Tile, 12.0f * Tile};
 }
 
-sf::Vector2f castleInteriorStart()
-{
-    return {106.0f * Tile, 12.0f * Tile};
-}
-
 SpawnRequest makeSpawn(const std::string& type, int col, int row, int variant = 0)
 {
     return {type, {col * Tile, row * Tile}, variant};
