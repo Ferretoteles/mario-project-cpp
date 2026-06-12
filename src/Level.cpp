@@ -197,6 +197,15 @@ struct ThemeTileRects {
     sf::IntRect question;
 };
 
+struct ThemePipeRects {
+    sf::IntRect cap;
+    sf::IntRect body;
+};
+
+struct ThemeInnerRect {
+    sf::IntRect block;
+};
+
 int levelThemeIndex(int levelNumber)
 {
     return levelNumber <= 0 ? 0 : (levelNumber - 1) % 5;
@@ -211,65 +220,91 @@ const ThemeTileRects& getThemeTileRects(LevelTheme theme)
 {
     static const std::array<ThemeTileRects, 5> rects{{
         {
-            {142, 98, 148, 248},   // grass top - zielona trawa na gorze
-            {440, 98, 900, 250},   // grass longTop - dluga platforma z trawa
-            {450, 188, 850, 140},  // grass inner1 - brazowy dirt bez zielonej gory
-            {112, 220, 210, 100},  // grass inner2 - brazowy dirt z dolnej czesci bloku
-            {1024, 430, 315, 220}, // grass cracked - pekniety brazowy dirt
-            {86, 98, 118, 248},    // grass leftEdge - lewy bok top platformy
-            {226, 98, 118, 248},   // grass rightEdge - prawy bok top platformy
-            {95, 785, 360, 230},   // grass decorativeTop - kwiaty/dekoracja na gorze
-            {1004, 802, 345, 214}, // grass floating - gotowa latajaca wyspa
-            {585, 750, 285, 280},  // grass question - zolty blok pytania
+            {98, 57, 271, 290},    // grass top - ciasny pojedynczy blok trawy
+            {430, 57, 922, 291},   // grass longTop - dluga platforma z trawa
+            {573, 399, 314, 276},  // grass inner1 - blok bez bialych marginesow
+            {573, 399, 314, 276},  // grass inner2 - blok bez bialych marginesow
+            {1005, 422, 332, 253}, // grass cracked - pekniety brazowy dirt
+            {97, 379, 368, 297},   // grass leftEdge - lewy narożnik/platforma L
+            {573, 399, 314, 276},  // grass rightEdge - prawy gorny narożnik
+            {98, 719, 368, 300},   // grass decorativeTop - trawa z kwiatkami
+            {972, 772, 388, 242},  // grass floating - latajaca wyspa
+            {556, 732, 316, 288},  // grass question - zolty blok pytania
         },
         {
-            {142, 98, 148, 248},   // desert top - piaskowa gorna powierzchnia
-            {490, 120, 820, 250},  // desert longTop - dluga piaskowa platforma
-            {450, 188, 850, 140},  // desert inner1 - piaskowy blok bez gornej warstwy
-            {112, 220, 210, 100},  // desert inner2 - dolna czesc piaskowego bloku
-            {1006, 430, 335, 220}, // desert cracked - pekniety piaskowiec
-            {86, 98, 118, 248},    // desert leftEdge - lewa krawedz platformy
-            {226, 98, 118, 248},   // desert rightEdge - prawa krawedz platformy
-            {92, 775, 385, 240},   // desert decorativeTop - dekoracyjny top
-            {990, 800, 360, 220},  // desert floating - latajaca wyspa pustynna
-            {600, 760, 300, 285},  // desert question - specjalny blok z symbolem
+            {106, 105, 301, 283},  // desert top - piaskowa gorna powierzchnia
+            {484, 106, 882, 281},  // desert longTop - dluga piaskowa platforma
+            {602, 450, 225, 241},  // desert inner1 - pojedynczy blok
+            {602, 450, 225, 241},  // desert inner2 - pojedynczy blok
+            {960, 458, 398, 235},  // desert cracked - pekniety piaskowiec
+            {72, 438, 434, 283},   // desert leftEdge - lewy narożnik/platforma L
+            {602, 450, 225, 241},  // desert rightEdge - pojedynczy blok
+            {74, 766, 426, 264},   // desert decorativeTop - ozdobny piaskowy blok
+            {968, 742, 397, 283},  // desert floating - latajaca wyspa pustynna
+            {561, 735, 354, 326},  // desert question - specjalny blok z symbolem
         },
         {
-            {142, 98, 148, 248},   // ice top - lodowa/sniezna gorna powierzchnia
-            {405, 110, 620, 240},  // ice longTop - dluga lodowa platforma
-            {450, 188, 850, 140},  // ice inner1 - lodowy srodek bez snieznej gory
-            {112, 220, 210, 100},  // ice inner2 - dolna czesc lodowego bloku
-            {1006, 430, 335, 220}, // ice cracked - pekniety lodowy blok
-            {82, 105, 120, 250},   // ice leftEdge - lewa krawedz z czapa
-            {225, 105, 120, 250},  // ice rightEdge - prawa krawedz z czapa
-            {750, 505, 250, 245},  // ice decorativeTop - krysztaly jako dekoracja na gorze
-            {510, 845, 405, 130},  // ice floating - podwieszona lodowa platforma
-            {1100, 500, 270, 270}, // ice question - ozdobny blok sniezynki
+            {65, 107, 271, 293},   // ice top - pojedynczy lodowy top
+            {396, 117, 632, 284},  // ice longTop - dluga lodowa platforma
+            {370, 481, 292, 292},  // ice inner1 - lodowy blok
+            {370, 481, 292, 292},  // ice inner2 - lodowy blok
+            {370, 481, 292, 292},  // ice cracked - bez bialych marginesow
+            {86, 478, 217, 297},   // ice leftEdge - lewa krawedz z czapa
+            {1088, 107, 302, 294}, // ice rightEdge - prawy narożnik z czapa
+            {732, 482, 298, 294},  // ice decorativeTop - krysztaly
+            {502, 839, 418, 166},  // ice floating - podwieszona lodowa platforma
+            {1083, 486, 299, 295}, // ice question - ozdobny blok sniezynki
         },
         {
-            {120, 80, 150, 190},   // castle top - kamienny gorny blok
-            {400, 80, 900, 210},   // castle longTop - dlugi kamienny most/platforma
-            {450, 170, 850, 120},  // castle inner1 - kamienny srodek bez gornej krawedzi
-            {720, 462, 300, 250},  // castle inner2 - ceglany kamienny srodek
-            {345, 455, 300, 250},  // castle cracked - pekniety kamien
-            {70, 330, 190, 320},   // castle leftEdge - boczna krawedz/schodek
-            {1120, 80, 180, 200},  // castle rightEdge - prawa krawedz dlugiej platformy
-            {1035, 335, 330, 335}, // castle decorativeTop - brama/dekoracyjny blok
-            {590, 760, 760, 255},  // castle floating - kamienna latajaca platforma
-            {92, 735, 330, 300},   // castle question - magiczny blok/symbol
+            {60, 51, 236, 229},    // castle top - kamienny gorny blok
+            {413, 51, 955, 230},   // castle longTop - dlugi kamienny most/platforma
+            {531, 347, 123, 328},  // castle inner1 - pionowy blok kamienny
+            {730, 370, 259, 280},  // castle inner2 - ceglany kamienny srodek
+            {730, 370, 259, 280},  // castle cracked - pekniety kamien
+            {59, 347, 414, 326},   // castle leftEdge - boczna krawedz/schodek
+            {531, 347, 123, 328},  // castle rightEdge - pionowy blok kamienny
+            {1036, 359, 326, 313}, // castle decorativeTop - brama/dekoracyjny blok
+            {575, 752, 787, 272},  // castle floating - kamienna latajaca platforma
+            {112, 713, 317, 310},  // castle question - magiczny blok/symbol
         },
         {
-            {90, 85, 165, 300},    // lava top - lawa na gorze, ciemna skala pod spodem
-            {350, 95, 650, 285},   // lava longTop - dluga lawowa platforma
-            {360, 195, 620, 170},  // lava inner1 - ciemna skala pod lawa
-            {710, 465, 300, 250},  // lava inner2 - ciemny ceglany srodek
-            {350, 440, 300, 240},  // lava cracked - peknieta lawowa skala
-            {80, 420, 220, 320},   // lava leftEdge - lawowy bok/schodek
-            {1120, 85, 225, 270},  // lava rightEdge - prawa krawedz z lawa
-            {700, 455, 275, 250},  // lava decorativeTop - ciemny dekoracyjny blok
-            {500, 800, 420, 250},  // lava floating - wyciety spod lawowej wyspy
-            {1100, 455, 265, 280}, // lava question - blok z plomieniem/symbolem
+            {41, 119, 234, 268},   // lava top - lawa na gorze, ciemna skala pod spodem
+            {341, 121, 672, 267},  // lava longTop - dluga lawowa platforma
+            {703, 453, 322, 303},  // lava inner1 - ciemny ceglany srodek
+            {703, 453, 322, 303},  // lava inner2 - ciemny ceglany srodek
+            {345, 454, 290, 301},  // lava cracked - peknieta lawowa skala
+            {49, 458, 218, 301},   // lava leftEdge - lawowy bok/schodek
+            {1082, 115, 304, 270}, // lava rightEdge - prawa krawedz z lawa
+            {703, 453, 322, 303},  // lava decorativeTop - ciemny dekoracyjny blok
+            {487, 816, 433, 217},  // lava floating - wyciety spod lawowej wyspy
+            {1098, 459, 307, 302}, // lava question - blok z plomieniem/symbolem
         },
+    }};
+
+    return rects[static_cast<std::size_t>(theme)];
+}
+
+const ThemePipeRects& getThemePipeRects(LevelTheme theme)
+{
+    static const std::array<ThemePipeRects, 5> rects{{
+        {{427, 56, 249, 116}, {454, 164, 178, 545}},
+        {{447, 64, 243, 112}, {471, 172, 191, 510}},
+        {{414, 80, 233, 116}, {430, 187, 191, 526}},
+        {{416, 58, 215, 108}, {437, 160, 174, 560}},
+        {{430, 99, 220, 104}, {446, 196, 180, 546}},
+    }};
+
+    return rects[static_cast<std::size_t>(theme)];
+}
+
+const ThemeInnerRect& getThemeInnerRect(LevelTheme theme)
+{
+    static const std::array<ThemeInnerRect, 5> rects{{
+        {{127, 119, 1001, 1009}},
+        {{157, 144, 939, 952}},
+        {{151, 139, 953, 984}},
+        {{208, 185, 839, 857}},
+        {{151, 122, 952, 969}},
     }};
 
     return rects[static_cast<std::size_t>(theme)];
@@ -319,7 +354,9 @@ bool drawLevelInnerBlock(sf::RenderWindow& window, const AssetManager& assets, i
         return false;
 
     const sf::Vector2u size = texture->getSize();
-    return size.x > 0 && size.y > 0 && drawTextureFragment(window, *texture, dst, {0, 0, static_cast<int>(size.x), static_cast<int>(size.y)});
+    if (size.x == 0 || size.y == 0)
+        return false;
+    return drawTextureFragment(window, *texture, dst, getThemeInnerRect(chooseTheme(levelNumber)).block);
 }
 
 bool drawLevelPipeFragment(sf::RenderWindow& window, const AssetManager& assets, int levelNumber, const sf::FloatRect& dst, sf::IntRect src)
@@ -376,16 +413,12 @@ sf::IntRect levelTerrainSource(int levelNumber, TerrainSprite sprite)
 
 sf::IntRect levelPipeCapSource(int levelNumber)
 {
-    if (levelThemeIndex(levelNumber) == 4)
-        return {428, 108, 252, 118};
-    return {418, 38, 248, 126};
+    return getThemePipeRects(chooseTheme(levelNumber)).cap;
 }
 
 sf::IntRect levelPipeBodySource(int levelNumber)
 {
-    if (levelThemeIndex(levelNumber) == 4)
-        return {459, 225, 180, 490};
-    return {454, 164, 178, 545};
+    return getThemePipeRects(chooseTheme(levelNumber)).body;
 }
 
 sf::IntRect levelPlatformSource(int levelNumber)
